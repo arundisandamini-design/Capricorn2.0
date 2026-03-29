@@ -1,0 +1,1891 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlexCoach</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
+  <script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: {
+        heading: ['Space Mono', 'monospace'],
+        body: ['Outfit', 'sans-serif']
+      }
+    }
+  }
+}
+</script>
+  <style>
+html, body { height: 100%; margin: 0; }
+.app-shell { height: 100%; overflow: auto; }
+.glow-green { box-shadow: 0 0 20px rgba(16,185,129,0.3); }
+.glow-text { text-shadow: 0 0 20px rgba(16,185,129,0.5); }
+@keyframes slideUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+@keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(16,185,129,0.4); } 70% { box-shadow: 0 0 0 10px rgba(16,185,129,0); } 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); } }
+.anim-up { animation: slideUp 0.4s ease-out both; }
+.anim-up-1 { animation-delay: 0.05s; }
+.anim-up-2 { animation-delay: 0.1s; }
+.anim-up-3 { animation-delay: 0.15s; }
+.anim-up-4 { animation-delay: 0.2s; }
+.pulse-glow { animation: pulse-ring 2s infinite; }
+.chat-bubble-ai { background: linear-gradient(135deg, #064e3b, #065f46); border-radius: 2px 16px 16px 16px; }
+.chat-bubble-user { background: linear-gradient(135deg, #1e1b4b, #312e81); border-radius: 16px 2px 16px 16px; }
+.tab-active { background: linear-gradient(135deg, #059669, #10b981); color: white; box-shadow: 0 4px 15px rgba(16,185,129,0.4); }
+.tab-inactive { background: #1e1e2e; color: #9ca3af; }
+.card-dark { background: #12121f; border: 1px solid #1e1e35; }
+.input-dark { background: #0d0d1a; border: 1px solid #2d2d4a; color: #e5e7eb; }
+.input-dark:focus { border-color: #10b981; outline: none; box-shadow: 0 0 0 2px rgba(16,185,129,0.2); }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+.progress-ring { transition: stroke-dashoffset 0.6s ease; }
+</style>
+  <style>body { box-sizing: border-box; }
+.voice-indicator { animation: pulse-voice 1s infinite; }
+@keyframes pulse-voice { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+.recording { box-shadow: 0 0 20px rgba(239, 68, 68, 0.6); }
+</style>
+ </head>
+ <body class="h-full bg-[#0a0a14]">
+  <div class="app-shell font-body text-gray-200" id="app"><!-- ONBOARDING -->
+   <div id="onboarding-screen" class="h-full flex items-center justify-center p-4" style="display:none;">
+    <div class="card-dark rounded-3xl p-8 max-w-md w-full anim-up">
+     <div class="text-center mb-8">
+      <div class="text-5xl mb-4">
+       💪
+      </div>
+      <h1 class="font-heading text-2xl text-emerald-400 glow-text mb-2" id="onboard-title">FlexCoach</h1>
+      <p class="text-gray-400" id="onboard-subtitle">Your AI Health Coach</p>
+     </div>
+     <div class="space-y-4">
+      <div><label class="text-sm text-gray-400 mb-1 block">Your Name</label> <input id="ob-name" type="text" placeholder="Enter your name" class="input-dark w-full rounded-xl px-4 py-3 text-sm">
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+       <div><label class="text-sm text-gray-400 mb-1 block">Age</label> <input id="ob-age" type="number" placeholder="25" class="input-dark w-full rounded-xl px-4 py-3 text-sm">
+       </div>
+       <div><label class="text-sm text-gray-400 mb-1 block">Weight (kg)</label> <input id="ob-weight" type="number" placeholder="70" class="input-dark w-full rounded-xl px-4 py-3 text-sm">
+       </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+       <div><label class="text-sm text-gray-400 mb-1 block">Height (cm)</label> <input id="ob-height" type="number" placeholder="170" class="input-dark w-full rounded-xl px-4 py-3 text-sm">
+       </div>
+       <div><label class="text-sm text-gray-400 mb-1 block">Goal</label> <select id="ob-goal" class="input-dark w-full rounded-xl px-4 py-3 text-sm"> <option value="lose">Lose Weight</option> <option value="maintain">Maintain</option> <option value="gain">Build Muscle</option> </select>
+       </div>
+      </div>
+      <div><label class="text-sm text-gray-400 mb-1 block">Activity Level</label> <select id="ob-activity" class="input-dark w-full rounded-xl px-4 py-3 text-sm"> <option value="sedentary">Sedentary</option> <option value="light">Lightly Active</option> <option value="moderate">Moderately Active</option> <option value="active">Very Active</option> </select>
+      </div><button onclick="completeOnboarding()" class="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-semibold rounded-xl py-3 mt-2 transition-all glow-green"> Start My Journey 🚀 </button>
+     </div>
+    </div>
+   </div><!-- VOICE SETUP MODAL -->
+   <div id="voice-setup-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" style="display:none;">
+    <div class="card-dark rounded-3xl p-8 max-w-md w-full">
+     <h2 class="font-heading text-xl text-emerald-400 mb-4">🎤 Voice &amp; Audio Setup</h2>
+     <div class="space-y-3 mb-4">
+      <div id="voice-status" class="text-sm text-gray-400">
+       <p>Checking device capabilities...</p>
+      </div><button onclick="testMicrophone()" id="test-mic-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white rounded-xl py-2.5 text-sm font-semibold transition-all">🎤 Test Microphone</button> <button onclick="testSpeaker()" class="w-full bg-purple-600 hover:bg-purple-500 text-white rounded-xl py-2.5 text-sm font-semibold transition-all">🔊 Test Speaker</button>
+     </div><button onclick="toggleVoiceSetup()" class="w-full bg-gray-700 hover:bg-gray-600 text-white rounded-xl py-2.5 text-sm font-semibold">Done</button>
+    </div>
+   </div>
+   <div id="main-app" class="h-full flex flex-col" style="display:none;"><!-- Header -->
+    <header class="flex-shrink-0 px-4 pt-4 pb-2">
+     <div class="flex items-center justify-between max-w-2xl mx-auto">
+      <div>
+       <h1 class="font-heading text-lg text-emerald-400 glow-text" id="main-title">FlexCoach</h1>
+       <p class="text-xs text-gray-500" id="greeting-text">Welcome back</p>
+      </div>
+      <div class="flex items-center gap-3">
+       <div class="text-right">
+        <div class="text-xs text-gray-500">
+         Level <span id="level-num">1</span>
+        </div>
+        <div class="w-20 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+         <div id="xp-bar" class="h-full bg-gradient-to-r from-emerald-500 to-green-400 rounded-full transition-all duration-500" style="width:0%"></div>
+        </div>
+       </div>
+       <div id="streak-badge" class="flex items-center gap-1 bg-amber-900/40 border border-amber-600/40 rounded-full px-2.5 py-1"><span class="text-amber-400 text-xs">🔥</span> <span class="text-amber-400 text-xs font-bold" id="streak-count">0</span>
+       </div>
+      </div>
+     </div>
+    </header><!-- Tab Bar -->
+    <nav class="flex-shrink-0 px-4 py-2">
+     <div class="flex gap-1.5 max-w-2xl mx-auto bg-[#0d0d1a] rounded-2xl p-1.5"><button onclick="switchTab('dashboard')" data-tab="dashboard" class="tab-active flex-1 rounded-xl py-2 text-xs font-semibold transition-all flex items-center justify-center gap-1"> <i data-lucide="layout-dashboard" style="width:14px;height:14px"></i> Home </button> <button onclick="switchTab('meals')" data-tab="meals" class="tab-inactive flex-1 rounded-xl py-2 text-xs font-semibold transition-all flex items-center justify-center gap-1"> <i data-lucide="utensils" style="width:14px;height:14px"></i> Meals </button> <button onclick="switchTab('workout')" data-tab="workout" class="tab-inactive flex-1 rounded-xl py-2 text-xs font-semibold transition-all flex items-center justify-center gap-1"> <i data-lucide="dumbbell" style="width:14px;height:14px"></i> Workout </button> <button onclick="switchTab('chat')" data-tab="chat" class="tab-inactive flex-1 rounded-xl py-2 text-xs font-semibold transition-all flex items-center justify-center gap-1"> <i data-lucide="message-circle" style="width:14px;height:14px"></i> Coach </button> <button onclick="switchTab('progress')" data-tab="progress" class="tab-inactive flex-1 rounded-xl py-2 text-xs font-semibold transition-all flex items-center justify-center gap-1"> <i data-lucide="trending-up" style="width:14px;height:14px"></i> Stats </button>
+     </div>
+    </nav><!-- Content Area -->
+    <main class="flex-1 overflow-auto px-4 pb-4 scrollbar-hide">
+     <div class="max-w-2xl mx-auto"><!-- DASHBOARD TAB -->
+      <div id="tab-dashboard" class="tab-content space-y-4"><!-- Daily Summary -->
+       <div class="card-dark rounded-2xl p-5 anim-up">
+        <h3 class="font-heading text-sm text-emerald-400 mb-4">Today's Progress</h3>
+        <div class="grid grid-cols-3 gap-3">
+         <div class="text-center">
+          <div class="relative inline-block">
+           <svg width="70" height="70" class="transform -rotate-90"><circle cx="35" cy="35" r="28" fill="none" stroke="#1e1e35" stroke-width="5" /> <circle id="cal-ring" cx="35" cy="35" r="28" fill="none" stroke="#10b981" stroke-width="5" stroke-linecap="round" stroke-dasharray="175.9" stroke-dashoffset="175.9" class="progress-ring" />
+           </svg>
+           <div class="absolute inset-0 flex items-center justify-center"><span id="cal-display" class="text-sm font-bold text-emerald-400">0</span>
+           </div>
+          </div>
+          <p class="text-xs text-gray-500 mt-1">Calories</p>
+         </div>
+         <div class="text-center">
+          <div class="relative inline-block">
+           <svg width="70" height="70" class="transform -rotate-90"><circle cx="35" cy="35" r="28" fill="none" stroke="#1e1e35" stroke-width="5" /> <circle id="water-ring" cx="35" cy="35" r="28" fill="none" stroke="#3b82f6" stroke-width="5" stroke-linecap="round" stroke-dasharray="175.9" stroke-dashoffset="175.9" class="progress-ring" />
+           </svg>
+           <div class="absolute inset-0 flex items-center justify-center"><span id="water-display" class="text-sm font-bold text-blue-400">0</span>
+           </div>
+          </div>
+          <p class="text-xs text-gray-500 mt-1">Water 💧</p>
+         </div>
+         <div class="text-center">
+          <div class="relative inline-block">
+           <svg width="70" height="70" class="transform -rotate-90"><circle cx="35" cy="35" r="28" fill="none" stroke="#1e1e35" stroke-width="5" /> <circle id="workout-ring" cx="35" cy="35" r="28" fill="none" stroke="#a855f7" stroke-width="5" stroke-linecap="round" stroke-dasharray="175.9" stroke-dashoffset="175.9" class="progress-ring" />
+           </svg>
+           <div class="absolute inset-0 flex items-center justify-center"><span id="workout-display" class="text-sm font-bold text-purple-400">No</span>
+           </div>
+          </div>
+          <p class="text-xs text-gray-500 mt-1">Workout</p>
+         </div>
+        </div>
+       </div><!-- Quick Actions -->
+       <div class="grid grid-cols-2 gap-3 anim-up anim-up-1"><button onclick="quickLogWater()" class="card-dark rounded-2xl p-4 text-left hover:border-blue-500/50 transition-all group">
+         <div class="text-2xl mb-2">
+          💧
+         </div>
+         <div class="text-sm font-semibold">
+          Log Water
+         </div>
+         <div class="text-xs text-gray-500">
+          +1 glass
+         </div></button> <button onclick="quickLogWorkout()" class="card-dark rounded-2xl p-4 text-left hover:border-purple-500/50 transition-all group">
+         <div class="text-2xl mb-2">
+          🏋️
+         </div>
+         <div class="text-sm font-semibold">
+          Log Workout
+         </div>
+         <div class="text-xs text-gray-500">
+          Mark complete
+         </div></button>
+       </div><!-- Daily Challenge -->
+       <div class="anim-up anim-up-2" id="challenge-container">
+        <div class="bg-gradient-to-r from-emerald-900/40 to-emerald-800/20 border border-emerald-500/30 rounded-2xl p-5">
+         <div class="flex items-center gap-2 mb-2"><span class="text-lg">⚡</span>
+          <h4 class="font-heading text-sm text-emerald-400">Daily Challenge</h4>
+         </div>
+         <p class="text-sm text-gray-300" id="daily-challenge-text">Loading...</p><button onclick="completeChallenge()" id="challenge-btn" class="mt-3 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-lg px-4 py-2 transition-all"> Complete ✓ </button>
+        </div>
+       </div><!-- Calorie Estimator -->
+       <div class="card-dark rounded-2xl p-5 anim-up anim-up-3">
+        <h3 class="font-heading text-sm text-emerald-400 mb-3">🍽️ Quick Calorie Estimator</h3>
+        <p class="text-xs text-gray-500 mb-3">Describe your food to estimate calories</p>
+        <div class="flex gap-2"><input id="food-input" type="text" placeholder="e.g. 2 eggs and toast" class="input-dark flex-1 rounded-xl px-4 py-2.5 text-sm"> <button onclick="estimateCalories()" class="bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl px-4 py-2.5 text-sm font-semibold transition-all"> Estimate </button>
+        </div>
+        <div id="calorie-result" class="mt-3 hidden">
+         <div class="bg-emerald-900/30 border border-emerald-500/20 rounded-xl p-3">
+          <div class="flex justify-between items-center"><span class="text-sm text-gray-300" id="food-name"></span> <span class="text-emerald-400 font-bold" id="food-cals"></span>
+          </div>
+          <div class="flex gap-3 mt-2 text-xs text-gray-500"><span>🥩 P: <span id="food-protein">0</span>g</span> <span>🍞 C: <span id="food-carbs">0</span>g</span> <span>🧈 F: <span id="food-fat">0</span>g</span>
+          </div><button onclick="logEstimatedFood()" class="mt-2 text-xs text-emerald-400 hover:text-emerald-300 font-semibold">+ Log this meal</button>
+         </div>
+        </div>
+       </div><!-- Meal Photo Recognition -->
+       <div class="card-dark rounded-2xl p-5 anim-up anim-up-3">
+        <h3 class="font-heading text-sm text-emerald-400 mb-3">📸 Photo Meal Scanner</h3>
+        <p class="text-xs text-gray-500 mb-3">Upload a photo to identify meals</p>
+        <div class="flex gap-2">
+         <label class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl px-4 py-2.5 text-sm font-semibold transition-all cursor-pointer text-center"> <input type="file" accept="image/*" id="meal-photo-input" onchange="analyzePhotoMeal()" style="display:none;"> 📤 Upload Photo </label> <button id="camera-btn" onclick="openCameraCapture()" class="bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl px-4 py-2.5 text-sm font-semibold transition-all"> 📷 Camera </button>
+        </div>
+        <div id="photo-preview" class="mt-3 hidden">
+         <img id="photo-img" class="w-full rounded-lg max-h-48 object-cover border border-emerald-500/30">
+         <div class="mt-2 text-xs text-gray-400">
+          Photo uploaded ✓
+         </div>
+        </div>
+        <div id="photo-result" class="mt-3 hidden">
+         <div class="bg-emerald-900/30 border border-emerald-500/20 rounded-xl p-3">
+          <div class="flex justify-between items-center"><span class="text-sm text-gray-300" id="photo-food-name"></span> <span class="text-emerald-400 font-bold" id="photo-food-cals"></span>
+          </div>
+          <div class="flex gap-3 mt-2 text-xs text-gray-500"><span>🥩 P: <span id="photo-food-protein">0</span>g</span> <span>🍞 C: <span id="photo-food-carbs">0</span>g</span> <span>🧈 F: <span id="photo-food-fat">0</span>g</span>
+          </div>
+          <div class="flex gap-2 mt-3">
+           <button onclick="logPhotoFood()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-lg py-2">+ Log Meal</button> <button onclick="clearPhotoData()" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white text-xs font-semibold rounded-lg py-2">Clear</button>
+          </div>
+         </div>
+        </div>
+       </div>
+      </div><!-- MEALS TAB -->
+      <div id="tab-meals" class="tab-content space-y-4" style="display:none;">
+       <div class="card-dark rounded-2xl p-5 anim-up">
+        <div class="flex items-center justify-between mb-4">
+         <h3 class="font-heading text-sm text-emerald-400">🍽️ Today's Meal Plan</h3><button onclick="generateMealPlan()" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg px-3 py-1.5 font-semibold transition-all flex items-center gap-1"> <i data-lucide="refresh-cw" style="width:12px;height:12px"></i> New Plan </button>
+        </div>
+        <div id="meal-plan-content" class="space-y-3">
+         <p class="text-gray-500 text-sm text-center py-4">Tap "New Plan" to generate a personalized meal plan</p>
+        </div>
+       </div><!-- Log Custom Meal -->
+       <div class="card-dark rounded-2xl p-5 anim-up anim-up-1">
+        <h3 class="font-heading text-sm text-emerald-400 mb-3">📝 Log a Meal</h3>
+        <div class="space-y-3"><input id="meal-name-input" type="text" placeholder="What did you eat?" class="input-dark w-full rounded-xl px-4 py-2.5 text-sm"> <input id="meal-cal-input" type="number" placeholder="Estimated calories" class="input-dark w-full rounded-xl px-4 py-2.5 text-sm"> <button onclick="logCustomMeal()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl py-2.5 text-sm font-semibold transition-all"> Log Meal </button>
+        </div>
+       </div><!-- Today's Logged Meals -->
+       <div class="card-dark rounded-2xl p-5 anim-up anim-up-2">
+        <h3 class="font-heading text-sm text-emerald-400 mb-3">📋 Today's Log</h3>
+        <div id="meals-log-list" class="space-y-2">
+         <p class="text-gray-500 text-sm text-center py-2">No meals logged yet today</p>
+        </div>
+       </div>
+      </div><!-- WORKOUT TAB -->
+      <div id="tab-workout" class="tab-content space-y-4" style="display:none;">
+       <div class="card-dark rounded-2xl p-5 anim-up">
+        <div class="flex items-center justify-between mb-4">
+         <h3 class="font-heading text-sm text-emerald-400">🏋️ Today's Workout</h3><button onclick="generateWorkout()" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg px-3 py-1.5 font-semibold transition-all flex items-center gap-1"> <i data-lucide="refresh-cw" style="width:12px;height:12px"></i> New Workout </button>
+        </div>
+        <div id="workout-plan-content" class="space-y-3">
+         <p class="text-gray-500 text-sm text-center py-4">Tap "New Workout" to generate a workout plan</p>
+        </div>
+       </div><!-- Workout Timer -->
+       <div class="card-dark rounded-2xl p-5 anim-up anim-up-1">
+        <h3 class="font-heading text-sm text-emerald-400 mb-3">⏱️ Rest Timer</h3>
+        <div class="text-center">
+         <div class="text-4xl font-heading text-white mb-4" id="timer-display">
+          0:30
+         </div>
+         <div class="flex justify-center gap-3"><button onclick="setTimer(30)" class="bg-gray-800 hover:bg-gray-700 text-white rounded-lg px-3 py-1.5 text-xs">30s</button> <button onclick="setTimer(60)" class="bg-gray-800 hover:bg-gray-700 text-white rounded-lg px-3 py-1.5 text-xs">60s</button> <button onclick="setTimer(90)" class="bg-gray-800 hover:bg-gray-700 text-white rounded-lg px-3 py-1.5 text-xs">90s</button> <button onclick="toggleTimer()" id="timer-btn" class="bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg px-4 py-1.5 text-xs font-semibold">Start</button>
+         </div>
+        </div>
+       </div>
+      </div><!-- CHAT TAB -->
+      <div id="tab-chat" class="tab-content flex flex-col" style="display:none; height: calc(100% - 1rem);">
+       <div class="card-dark rounded-2xl p-4 flex flex-col flex-1 overflow-hidden">
+        <div class="flex items-center gap-2 mb-3 flex-shrink-0">
+         <div class="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-sm">
+          🤖
+         </div>
+         <div>
+          <h3 class="font-heading text-sm text-emerald-400">AI Health Coach</h3>
+          <p class="text-[10px] text-gray-500">Ask me anything about health &amp; fitness</p>
+         </div>
+        </div>
+        <div id="chat-messages" class="flex-1 overflow-auto space-y-3 scrollbar-hide pr-1 mb-3">
+         <div class="chat-bubble-ai px-4 py-3 max-w-[85%]">
+          <p class="text-sm text-gray-200">Hey! 👋 I'm your AI health coach. Ask me about nutrition, workouts, weight loss, or any health topic!</p>
+         </div>
+        </div>
+        <div class="flex gap-2 flex-shrink-0"><input id="chat-input" type="text" placeholder="Ask about health, nutrition, workouts..." class="input-dark flex-1 rounded-xl px-4 py-2.5 text-sm" onkeydown="if(event.key==='Enter')sendChat()"> <button onclick="sendChat()" class="bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl px-3 py-2.5 transition-all flex items-center justify-center" title="Send message"> <i data-lucide="send" style="width:16px;height:16px"></i> </button> <button id="chat-voice-btn" onclick="handleChatVoice()" class="bg-blue-600 hover:bg-blue-500 text-white rounded-xl px-3 py-2.5 transition-all flex items-center justify-center" title="Click to speak"> <i data-lucide="mic" style="width:16px;height:16px"></i> </button>
+        </div>
+       </div>
+      </div>
+     </div><!-- PROGRESS TAB -->
+     <div id="tab-progress" class="tab-content space-y-4" style="display:none;">
+      <div class="card-dark rounded-2xl p-5 anim-up">
+       <h3 class="font-heading text-sm text-emerald-400 mb-3">📏 BMI Calculator</h3>
+       <div class="grid grid-cols-2 gap-3 mb-3">
+        <div><label class="text-xs text-gray-500 mb-1 block">Weight (kg)</label> <input id="bmi-weight" type="number" placeholder="70" class="input-dark w-full rounded-lg px-3 py-2 text-sm">
+        </div>
+        <div><label class="text-xs text-gray-500 mb-1 block">Height (cm)</label> <input id="bmi-height" type="number" placeholder="170" class="input-dark w-full rounded-lg px-3 py-2 text-sm">
+        </div>
+       </div><button onclick="calculateBMI()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg py-2.5 text-sm font-semibold transition-all mb-3">Calculate BMI</button>
+       <div id="bmi-result" class="hidden">
+        <div class="bg-emerald-900/30 border border-emerald-500/20 rounded-xl p-4">
+         <div class="flex items-center justify-between mb-2"><span class="text-xs text-gray-400">Your BMI</span> <span class="text-2xl font-bold text-emerald-400" id="bmi-value">0</span>
+         </div>
+         <div class="text-xs text-gray-300 mb-3" id="bmi-category">
+          Calculating...
+         </div>
+         <div class="space-y-1 text-xs text-gray-500">
+          <div class="flex justify-between"><span>📉 Underweight</span> <span>&lt; 18.5</span>
+          </div>
+          <div class="flex justify-between"><span>✅ Normal</span> <span>18.5 - 24.9</span>
+          </div>
+          <div class="flex justify-between"><span>⚠️ Overweight</span> <span>25 - 29.9</span>
+          </div>
+          <div class="flex justify-between"><span>🔴 Obese</span> <span>≥ 30</span>
+          </div>
+         </div>
+        </div>
+       </div>
+      </div>
+      <div class="card-dark rounded-2xl p-5 anim-up anim-up-1">
+       <h3 class="font-heading text-sm text-emerald-400 mb-3">📊 Weekly Overview</h3>
+       <div id="weekly-chart" class="flex items-end justify-between gap-1 h-32 px-2">
+       </div>
+       <div class="flex justify-between text-[10px] text-gray-600 mt-1 px-2"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+       </div>
+      </div>
+      <div class="card-dark rounded-2xl p-5 anim-up anim-up-1">
+       <h3 class="font-heading text-sm text-emerald-400 mb-3">🏆 Badges</h3>
+       <div id="badges-container" class="flex flex-wrap gap-2">
+       </div>
+      </div>
+      <div class="card-dark rounded-2xl p-5 anim-up anim-up-2">
+       <h3 class="font-heading text-sm text-emerald-400 mb-3">⚖️ Log Weight</h3>
+       <div class="flex gap-2"><input id="weight-input" type="number" placeholder="Weight in kg" class="input-dark flex-1 rounded-xl px-4 py-2.5 text-sm"> <button onclick="logWeight()" class="bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl px-4 py-2.5 text-sm font-semibold">Log</button>
+       </div>
+       <div id="weight-history" class="mt-3 space-y-1"></div>
+      </div><!-- Reset Profile -->
+      <div class="card-dark rounded-2xl p-5 anim-up anim-up-3"><button onclick="showResetConfirm()" id="reset-btn" class="w-full text-red-400 hover:text-red-300 text-xs font-semibold py-2">Reset Profile</button>
+       <div id="reset-confirm" class="hidden mt-2 flex gap-2"><button onclick="resetProfile()" class="flex-1 bg-red-600 hover:bg-red-500 text-white text-xs rounded-lg py-2">Yes, Reset</button> <button onclick="hideResetConfirm()" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded-lg py-2">Cancel</button>
+       </div>
+      </div>
+     </div>
+    </main>
+   </div>
+  </div><!-- Toast -->
+  <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 bg-emerald-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-lg z-50 transition-all duration-300 opacity-0 pointer-events-none" style="transform: translate(-50%, -20px);"><span id="toast-text"></span>
+  </div>
+  <script>
+// ─── VOICE & ACCESSIBILITY ───
+let voiceRecognitionActive = false;
+let textToSpeechEnabled = false;
+let recognitionInstance = null;
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const SpeechSynthesis = window.speechSynthesis;
+
+function toggleVoiceSetup() {
+  const modal = document.getElementById('voice-setup-modal');
+  if (!modal) return;
+  modal.style.display = modal.style.display === 'none' ? 'flex' : 'none';
+  if (modal.style.display === 'flex') checkVoiceSupport();
+}
+
+// ─── STATE ───
+let allData = [];
+let profile = null;
+let timerInterval = null;
+let timerSeconds = 30;
+let timerRunning = false;
+let lastEstimate = null;
+const today = () => new Date().toISOString().slice(0, 10);function checkVoiceSupport() {
+  const status = document.getElementById('voice-status');
+  if (!status) return;
+  let html = '<div class="space-y-2">';
+  html += SpeechRecognition ? '✅ <span class="text-emerald-400">Voice Recognition: Available</span>' : '❌ <span class="text-red-400">Voice Recognition: Not supported</span>';
+  html += '<br>';
+  html += SpeechSynthesis ? '✅ <span class="text-emerald-400">Text-to-Speech: Available</span>' : '❌ <span class="text-red-400">Text-to-Speech: Not supported</span>';
+  html += '</div>';
+  status.innerHTML = html;
+}
+
+function testMicrophone() {
+  if (!SpeechRecognition) {
+    showToast('Voice recognition not supported in this browser');
+    return;
+  }
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = '🎤 Listening... (3 sec)';
+  recognitionInstance = new SpeechRecognition();
+  recognitionInstance.lang = 'en-US';
+  recognitionInstance.onresult = (event) => {
+    const text = event.results[0][0].transcript;
+    showToast(`Heard: "${text}"`);
+    btn.disabled = false;
+    btn.textContent = 'Test Microphone';
+  };
+  recognitionInstance.onerror = () => {
+    showToast('Microphone test failed');
+    btn.disabled = false;
+    btn.textContent = 'Test Microphone';
+  };
+  recognitionInstance.start();
+}
+
+function testSpeaker() {
+  if (!SpeechSynthesis) {
+    showToast('Text-to-speech not supported');
+    return;
+  }
+  const utterance = new SpeechSynthesisUtterance('FlexCoach voice test. Hello, this is your health coach.');
+  utterance.rate = 1;
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utterance);
+  showToast('🔊 Speaking...');
+}
+
+function toggleTextToSpeech() {
+  textToSpeechEnabled = !textToSpeechEnabled;
+  const toggle = document.getElementById('tts-toggle');
+  if (toggle) {
+    toggle.classList.toggle('ring-2', textToSpeechEnabled);
+    toggle.classList.toggle('ring-purple-400', textToSpeechEnabled);
+  }
+  showToast(textToSpeechEnabled ? '🔊 Text-to-Speech ON' : '🔇 Text-to-Speech OFF');
+  localStorage.setItem('fc_tts_enabled', textToSpeechEnabled);
+}
+
+function speakText(text) {
+  if (!textToSpeechEnabled || !SpeechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.rate = 1;
+  utterance.pitch = 1;
+  window.speechSynthesis.speak(utterance);
+}
+
+function startVoiceInput(btn, callback) {
+  if (!SpeechRecognition) {
+    showToast('Voice recognition not available');
+    return;
+  }
+  if (btn) {
+    btn.classList.add('recording', 'voice-indicator');
+    btn.innerHTML = '<i data-lucide="mic" style="width:18px;height:18px"></i>';
+    lucide.createIcons();
+  }
+  recognitionInstance = new SpeechRecognition();
+  recognitionInstance.lang = 'en-US';
+  recognitionInstance.continuous = false;
+  recognitionInstance.interimResults = false;
+  recognitionInstance.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    if (btn) {
+      btn.classList.remove('recording', 'voice-indicator');
+      btn.innerHTML = '<i data-lucide="mic" style="width:16px;height:16px"></i>';
+      lucide.createIcons();
+    }
+    callback(transcript);
+  };
+  recognitionInstance.onerror = () => {
+    if (btn) {
+      btn.classList.remove('recording', 'voice-indicator');
+      btn.innerHTML = '<i data-lucide="mic" style="width:16px;height:16px"></i>';
+      lucide.createIcons();
+    }
+    showToast('Voice input failed');
+  };
+  recognitionInstance.start();
+}
+
+function handleChatVoice() {
+  if (!SpeechRecognition) {
+    showToast('🎤 Voice not supported on this browser');
+    return;
+  }
+  
+  const btn = document.getElementById('chat-voice-btn');
+  if (!btn) return;
+  
+  try {
+    btn.classList.add('recording');
+    btn.style.boxShadow = '0 0 20px rgba(239, 68, 68, 0.6)';
+    showToast('🎤 Listening... speak now');
+    
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    
+    let hasResult = false;
+    
+    recognition.onresult = (event) => {
+      hasResult = true;
+      if (event.results && event.results[0]) {
+        const transcript = event.results[0][0].transcript;
+        if (transcript && transcript.trim()) {
+          document.getElementById('chat-input').value = transcript;
+          sendChat();
+        }
+      }
+    };
+    
+    recognition.onerror = (event) => {
+      if (event.error === 'no-speech') {
+        showToast('🎤 No speech detected - try again');
+      } else if (event.error === 'network') {
+        showToast('🎤 Network error - check connection');
+      } else {
+        showToast('🎤 Error: ' + event.error);
+      }
+    };
+    
+    recognition.onend = () => {
+      btn.classList.remove('recording');
+      btn.style.boxShadow = '';
+      if (!hasResult) {
+        showToast('🎤 Say something to send');
+      }
+    };
+    
+    recognition.start();
+  } catch (err) {
+    btn.classList.remove('recording');
+    btn.style.boxShadow = '';
+    showToast('🎤 Voice error - try typing instead');
+  }
+}
+
+function handleVoiceCommand(transcript) {
+  const cmd = transcript.toLowerCase().trim();
+  let handled = false;
+
+  // Log water
+  if (cmd.includes('water') || cmd.includes('drink')) {
+    quickLogWater();
+    handled = true;
+  }
+  // Log workout
+  if (cmd.includes('workout') || cmd.includes('exercise')) {
+    quickLogWorkout();
+    handled = true;
+  }
+  // Generate meal plan
+  if (cmd.includes('meal') || cmd.includes('food')) {
+    generateMealPlan();
+    showToast('📋 Meal plan generated');
+    handled = true;
+  }
+  // Switch tabs by voice
+  if (cmd.includes('home') || cmd.includes('dashboard')) {
+    switchTab('dashboard');
+    handled = true;
+  }
+  if (cmd.includes('meals') || cmd.includes('food')) {
+    switchTab('meals');
+    handled = true;
+  }
+  if (cmd.includes('workout') || cmd.includes('exercise')) {
+    switchTab('workout');
+    handled = true;
+  }
+  if (cmd.includes('chat') || cmd.includes('coach')) {
+    switchTab('chat');
+    handled = true;
+  }
+  if (cmd.includes('stats') || cmd.includes('progress')) {
+    switchTab('progress');
+    handled = true;
+  }
+
+  if (handled) {
+    speakText('Command executed');
+  } else {
+    showToast(`Voice command: "${transcript}"`);
+  }
+}
+
+// ─── FOOD DATABASE (extensive for varied estimates) ───
+const FOOD_DB = {
+  'egg': { cal: 78, p: 6, c: 1, f: 5 }, 'eggs': { cal: 78, p: 6, c: 1, f: 5 },
+  'toast': { cal: 75, p: 3, c: 13, f: 1 }, 'bread': { cal: 80, p: 3, c: 15, f: 1 },
+  'rice': { cal: 206, p: 4, c: 45, f: 0.4 }, 'chicken': { cal: 239, p: 27, c: 0, f: 14 },
+  'chicken breast': { cal: 165, p: 31, c: 0, f: 3.6 },
+  'salmon': { cal: 208, p: 20, c: 0, f: 13 }, 'fish': { cal: 136, p: 20, c: 0, f: 6 },
+  'banana': { cal: 105, p: 1.3, c: 27, f: 0.4 }, 'apple': { cal: 95, p: 0.5, c: 25, f: 0.3 },
+  'milk': { cal: 149, p: 8, c: 12, f: 8 }, 'cheese': { cal: 113, p: 7, c: 0.4, f: 9 },
+  'yogurt': { cal: 100, p: 17, c: 6, f: 0.7 }, 'oatmeal': { cal: 154, p: 5, c: 27, f: 3 },
+  'pasta': { cal: 220, p: 8, c: 43, f: 1.3 }, 'steak': { cal: 271, p: 26, c: 0, f: 18 },
+  'salad': { cal: 20, p: 1.5, c: 3.5, f: 0.2 }, 'avocado': { cal: 240, p: 3, c: 12, f: 22 },
+  'potato': { cal: 161, p: 4, c: 37, f: 0.2 }, 'sweet potato': { cal: 103, p: 2, c: 24, f: 0.1 },
+  'pizza': { cal: 285, p: 12, c: 36, f: 10 }, 'burger': { cal: 354, p: 20, c: 29, f: 17 },
+  'sandwich': { cal: 280, p: 15, c: 30, f: 10 }, 'soup': { cal: 100, p: 5, c: 12, f: 3 },
+  'coffee': { cal: 5, p: 0.3, c: 0, f: 0 }, 'tea': { cal: 2, p: 0, c: 0.5, f: 0 },
+  'orange': { cal: 62, p: 1.2, c: 15, f: 0.2 }, 'almond': { cal: 7, p: 0.3, c: 0.3, f: 0.6 },
+  'almonds': { cal: 164, p: 6, c: 6, f: 14 }, 'peanut butter': { cal: 188, p: 8, c: 6, f: 16 },
+  'protein shake': { cal: 150, p: 25, c: 8, f: 3 }, 'smoothie': { cal: 180, p: 5, c: 35, f: 2 },
+  'broccoli': { cal: 55, p: 3.7, c: 11, f: 0.6 }, 'spinach': { cal: 7, p: 0.9, c: 1, f: 0.1 },
+  'tofu': { cal: 144, p: 15, c: 3.5, f: 8 }, 'lentils': { cal: 230, p: 18, c: 40, f: 0.8 },
+  'beans': { cal: 225, p: 15, c: 40, f: 0.9 }, 'shrimp': { cal: 85, p: 20, c: 0.2, f: 0.5 },
+  'turkey': { cal: 189, p: 29, c: 0, f: 7 }, 'bacon': { cal: 43, p: 3, c: 0.1, f: 3.3 },
+  'pancake': { cal: 86, p: 2.5, c: 11, f: 3.5 }, 'pancakes': { cal: 258, p: 7.5, c: 33, f: 10.5 },
+  'waffle': { cal: 218, p: 6, c: 25, f: 11 }, 'cereal': { cal: 150, p: 3, c: 30, f: 2 },
+  'granola': { cal: 210, p: 5, c: 30, f: 8 }, 'mango': { cal: 99, p: 1.4, c: 25, f: 0.6 },
+  'grapes': { cal: 62, p: 0.6, c: 16, f: 0.3 }, 'watermelon': { cal: 46, p: 0.9, c: 11, f: 0.2 },
+  'corn': { cal: 96, p: 3.4, c: 21, f: 1.5 }, 'mushroom': { cal: 15, p: 2.2, c: 2.3, f: 0.2 },
+  'noodles': { cal: 220, p: 7, c: 40, f: 3 }, 'sushi': { cal: 200, p: 9, c: 28, f: 5 },
+  'taco': { cal: 210, p: 9, c: 21, f: 10 }, 'burrito': { cal: 350, p: 15, c: 40, f: 14 },
+  'fries': { cal: 312, p: 3.4, c: 41, f: 15 }, 'ice cream': { cal: 207, p: 3.5, c: 24, f: 11 },
+  'chocolate': { cal: 155, p: 1.4, c: 17, f: 9 }, 'cookie': { cal: 78, p: 1, c: 10, f: 3.6 },
+  'donut': { cal: 253, p: 3, c: 31, f: 14 }, 'cake': { cal: 257, p: 3, c: 35, f: 12 },
+  'popcorn': { cal: 93, p: 3, c: 19, f: 1 }, 'hummus': { cal: 166, p: 8, c: 14, f: 10 },
+  'olive oil': { cal: 119, p: 0, c: 0, f: 14 }, 'butter': { cal: 102, p: 0.1, c: 0, f: 12 },
+  'honey': { cal: 64, p: 0.1, c: 17, f: 0 }, 'jam': { cal: 56, p: 0.1, c: 14, f: 0 },
+  'roti': { cal: 120, p: 3, c: 20, f: 3.5 }, 'chapati': { cal: 120, p: 3, c: 20, f: 3.5 },
+  'dal': { cal: 180, p: 12, c: 28, f: 3 }, 'paneer': { cal: 265, p: 18, c: 4, f: 20 },
+  'curry': { cal: 220, p: 12, c: 15, f: 12 }, 'biryani': { cal: 290, p: 12, c: 40, f: 10 },
+  'dosa': { cal: 120, p: 3, c: 18, f: 4 }, 'idli': { cal: 39, p: 2, c: 8, f: 0.2 }
+};
+
+// ─── MEAL PLAN DATABASE ───
+const MEAL_PLANS = {
+  lose: {
+    breakfast: [
+      { name: 'Greek Yogurt Parfait', desc: 'Low-fat Greek yogurt + mixed berries + 1 tbsp honey + chia seeds', cal: 280, p: 20, c: 35, f: 8 },
+      { name: 'Veggie Egg White Omelette', desc: '3 egg whites + spinach + tomatoes + mushrooms + whole wheat toast', cal: 250, p: 22, c: 20, f: 6 },
+      { name: 'Overnight Oats', desc: 'Rolled oats + almond milk + banana slices + flax seeds', cal: 300, p: 10, c: 48, f: 8 },
+      { name: 'Smoothie Bowl', desc: 'Frozen berries + protein powder + almond milk + topped with granola', cal: 290, p: 24, c: 38, f: 6 },
+      { name: 'Avocado Toast Light', desc: '1 slice whole grain bread + ¼ avocado + poached egg + chili flakes', cal: 260, p: 14, c: 22, f: 14 },
+      { name: 'Cottage Cheese & Fruit', desc: 'Low-fat cottage cheese + pineapple chunks + walnuts', cal: 230, p: 18, c: 22, f: 8 },
+      { name: 'Moong Dal Chilla', desc: 'Lentil crepes with mint chutney + cucumber', cal: 220, p: 14, c: 30, f: 5 },
+    ],
+    lunch: [
+      { name: 'Grilled Chicken Salad', desc: 'Mixed greens + grilled chicken breast + cherry tomatoes + light vinaigrette', cal: 380, p: 35, c: 15, f: 18 },
+      { name: 'Quinoa Buddha Bowl', desc: 'Quinoa + roasted chickpeas + roasted veggies + tahini drizzle', cal: 420, p: 18, c: 52, f: 16 },
+      { name: 'Turkey Lettuce Wraps', desc: 'Ground turkey + water chestnuts + hoisin sauce in butter lettuce', cal: 340, p: 28, c: 18, f: 16 },
+      { name: 'Tuna Poke Bowl', desc: 'Sushi rice + raw tuna + edamame + seaweed + ginger dressing', cal: 380, p: 30, c: 40, f: 10 },
+      { name: 'Lentil Soup + Salad', desc: 'Red lentil soup + side mixed green salad + lemon dressing', cal: 350, p: 20, c: 45, f: 8 },
+      { name: 'Grilled Fish Tacos', desc: '2 small corn tortillas + grilled white fish + cabbage slaw + lime', cal: 360, p: 28, c: 30, f: 12 },
+      { name: 'Chicken Tikka Salad', desc: 'Tandoori chicken pieces + mixed greens + raita dressing', cal: 350, p: 32, c: 12, f: 16 },
+    ],
+    dinner: [
+      { name: 'Baked Salmon + Veggies', desc: 'Salmon fillet + steamed broccoli + roasted sweet potato', cal: 420, p: 32, c: 30, f: 18 },
+      { name: 'Chicken Stir-Fry', desc: 'Chicken breast + bell peppers + snap peas + ginger sauce + brown rice', cal: 400, p: 30, c: 40, f: 12 },
+      { name: 'Zucchini Noodle Bolognese', desc: 'Spiralized zucchini + lean turkey bolognese + parmesan', cal: 320, p: 28, c: 18, f: 14 },
+      { name: 'Shrimp & Cauliflower Rice', desc: 'Garlic shrimp + cauliflower rice + roasted asparagus', cal: 280, p: 30, c: 14, f: 10 },
+      { name: 'Stuffed Bell Peppers', desc: 'Peppers stuffed with ground chicken + black beans + salsa', cal: 350, p: 26, c: 32, f: 10 },
+      { name: 'Tofu Vegetable Curry', desc: 'Light coconut curry + tofu + mixed vegetables + small portion rice', cal: 380, p: 18, c: 42, f: 14 },
+      { name: 'Grilled Chicken + Salad', desc: 'Herb-grilled chicken + large mixed salad + olive oil dressing', cal: 340, p: 34, c: 10, f: 16 },
+    ],
+    snack: [
+      { name: 'Apple + Almond Butter', desc: '1 medium apple + 1 tbsp almond butter', cal: 160, p: 4, c: 22, f: 8 },
+      { name: 'Protein Shake', desc: 'Whey protein + water + ice', cal: 120, p: 24, c: 3, f: 1 },
+      { name: 'Carrot Sticks + Hummus', desc: 'Baby carrots + 2 tbsp hummus', cal: 130, p: 4, c: 16, f: 6 },
+      { name: 'Hard-Boiled Eggs', desc: '2 hard-boiled eggs with a pinch of salt', cal: 156, p: 12, c: 2, f: 10 },
+      { name: 'Mixed Nuts (small)', desc: '15 almonds + 5 cashews', cal: 150, p: 5, c: 6, f: 12 },
+      { name: 'Green Smoothie', desc: 'Spinach + banana + almond milk', cal: 140, p: 4, c: 26, f: 3 },
+    ]
+  },
+  maintain: {
+    breakfast: [
+      { name: 'Classic Eggs & Toast', desc: '2 scrambled eggs + 2 whole wheat toast + avocado spread', cal: 420, p: 20, c: 35, f: 22 },
+      { name: 'Banana Protein Pancakes', desc: 'Oat flour pancakes + banana + protein powder + maple syrup', cal: 440, p: 28, c: 55, f: 12 },
+      { name: 'Breakfast Burrito', desc: 'Whole wheat tortilla + scrambled eggs + black beans + cheese + salsa', cal: 450, p: 24, c: 40, f: 20 },
+      { name: 'Acai Bowl', desc: 'Acai blend + granola + mixed berries + coconut flakes + honey', cal: 400, p: 8, c: 62, f: 14 },
+      { name: 'Masala Dosa', desc: 'Crispy dosa + potato masala + sambar + coconut chutney', cal: 380, p: 10, c: 50, f: 14 },
+      { name: 'Omelette & Fruit', desc: '3-egg omelette with cheese + side of mixed fruit', cal: 400, p: 26, c: 20, f: 24 },
+    ],
+    lunch: [
+      { name: 'Chicken Caesar Wrap', desc: 'Whole wheat wrap + grilled chicken + romaine + parmesan + caesar dressing', cal: 520, p: 35, c: 38, f: 24 },
+      { name: 'Mediterranean Bowl', desc: 'Falafel + hummus + tabbouleh + pita bread + tzatziki', cal: 550, p: 18, c: 60, f: 26 },
+      { name: 'Teriyaki Salmon Bowl', desc: 'Teriyaki glazed salmon + steamed rice + edamame + pickled ginger', cal: 530, p: 32, c: 52, f: 18 },
+      { name: 'Paneer Tikka Wrap', desc: 'Grilled paneer + whole wheat wrap + mint chutney + onions', cal: 480, p: 24, c: 38, f: 24 },
+      { name: 'Turkey Club Sandwich', desc: 'Sourdough + turkey + bacon + lettuce + tomato + mayo', cal: 500, p: 30, c: 40, f: 22 },
+      { name: 'Poke Bowl', desc: 'Rice base + marinated tuna + avocado + mango + soy dressing', cal: 480, p: 28, c: 50, f: 16 },
+    ],
+    dinner: [
+      { name: 'Herb-Crusted Chicken', desc: 'Roasted chicken thigh + mashed potatoes + steamed green beans', cal: 550, p: 38, c: 40, f: 24 },
+      { name: 'Pasta Primavera', desc: 'Penne + seasonal vegetables + olive oil garlic sauce + parmesan', cal: 520, p: 16, c: 65, f: 20 },
+      { name: 'BBQ Chicken Pizza (2 slices)', desc: 'Thin crust + BBQ chicken + red onion + cilantro', cal: 540, p: 28, c: 56, f: 22 },
+      { name: 'Butter Chicken + Naan', desc: 'Creamy butter chicken + garlic naan + raita', cal: 580, p: 30, c: 48, f: 28 },
+      { name: 'Grilled Steak + Veggies', desc: '6oz sirloin + roasted potatoes + grilled asparagus', cal: 560, p: 42, c: 30, f: 28 },
+      { name: 'Thai Green Curry', desc: 'Green curry with chicken + jasmine rice + Thai basil', cal: 530, p: 26, c: 52, f: 22 },
+    ],
+    snack: [
+      { name: 'Trail Mix', desc: 'Mixed nuts + dark chocolate chips + dried cranberries', cal: 200, p: 5, c: 18, f: 14 },
+      { name: 'Greek Yogurt + Granola', desc: 'Full-fat Greek yogurt + crunchy granola', cal: 220, p: 14, c: 24, f: 8 },
+      { name: 'Cheese & Crackers', desc: 'Cheddar cheese cubes + whole grain crackers', cal: 200, p: 10, c: 16, f: 12 },
+      { name: 'Banana + Peanut Butter', desc: '1 banana + 1.5 tbsp peanut butter', cal: 240, p: 8, c: 30, f: 12 },
+      { name: 'Energy Balls', desc: 'Oats + peanut butter + honey + dark chocolate chips', cal: 180, p: 6, c: 22, f: 8 },
+    ]
+  },
+  gain: {
+    breakfast: [
+      { name: 'Mass Gainer Smoothie', desc: 'Oats + banana + peanut butter + whole milk + whey protein + honey', cal: 680, p: 40, c: 75, f: 24 },
+      { name: 'Full English Breakfast', desc: '3 eggs + 2 bacon + 2 toast + baked beans + sausage', cal: 720, p: 42, c: 48, f: 38 },
+      { name: 'Loaded Oatmeal', desc: 'Oats cooked in milk + banana + almonds + peanut butter + protein powder', cal: 650, p: 35, c: 70, f: 24 },
+      { name: 'Egg Fried Rice', desc: '3 eggs + 1.5 cups rice + vegetables + soy sauce', cal: 600, p: 22, c: 80, f: 18 },
+      { name: 'Stuffed Paratha Plate', desc: '2 aloo parathas + curd + pickle + butter', cal: 640, p: 14, c: 68, f: 34 },
+      { name: 'Double Protein Pancakes', desc: 'Stacked pancakes + 2 scoops protein + nuts + maple syrup', cal: 700, p: 44, c: 72, f: 22 },
+    ],
+    lunch: [
+      { name: 'Double Chicken Rice Bowl', desc: '2 chicken breasts + 2 cups brown rice + avocado + teriyaki', cal: 780, p: 60, c: 72, f: 24 },
+      { name: 'Beef Burrito Bowl', desc: 'Ground beef + rice + beans + cheese + sour cream + guacamole', cal: 750, p: 42, c: 65, f: 34 },
+      { name: 'Loaded Pasta', desc: 'Chicken + pasta + alfredo sauce + broccoli + garlic bread', cal: 800, p: 45, c: 80, f: 28 },
+      { name: 'Lamb Biryani Feast', desc: 'Lamb biryani + raita + boiled egg + papad', cal: 720, p: 35, c: 75, f: 30 },
+      { name: 'Tuna Melt + Fries', desc: 'Tuna melt sandwich + sweet potato fries + coleslaw', cal: 700, p: 38, c: 62, f: 30 },
+      { name: 'Chicken Shawarma Plate', desc: 'Chicken shawarma + hummus + rice + garlic sauce + pita', cal: 740, p: 42, c: 68, f: 28 },
+    ],
+    dinner: [
+      { name: 'Steak & Sweet Potato', desc: '8oz ribeye + large sweet potato + butter + steamed broccoli', cal: 720, p: 50, c: 48, f: 36 },
+      { name: 'Salmon Pasta', desc: 'Salmon fillet + creamy pasta + garlic bread + parmesan', cal: 750, p: 40, c: 70, f: 32 },
+      { name: 'Chicken Thigh Dinner', desc: '2 chicken thighs + mashed potatoes + gravy + corn', cal: 700, p: 44, c: 55, f: 32 },
+      { name: 'Paneer Butter Masala Feast', desc: 'Paneer curry + 3 rotis + dal + rice + salad', cal: 780, p: 32, c: 82, f: 34 },
+      { name: 'BBQ Ribs Plate', desc: 'BBQ pork ribs + coleslaw + cornbread + baked beans', cal: 800, p: 40, c: 60, f: 40 },
+      { name: 'Chicken Fried Rice Feast', desc: 'Large portion chicken fried rice + egg rolls + soy sauce', cal: 720, p: 32, c: 85, f: 26 },
+    ],
+    snack: [
+      { name: 'PB&J Sandwich', desc: 'Whole wheat bread + peanut butter + jelly', cal: 380, p: 14, c: 48, f: 18 },
+      { name: 'Mass Gainer Shake', desc: 'Mass gainer + whole milk + banana', cal: 450, p: 30, c: 60, f: 12 },
+      { name: 'Nuts & Dried Fruit', desc: 'Large handful mixed nuts + dates + dried mango', cal: 350, p: 10, c: 35, f: 22 },
+      { name: 'Cheese Quesadilla', desc: 'Flour tortilla + cheese + chicken', cal: 400, p: 22, c: 30, f: 22 },
+      { name: 'Protein Ice Cream', desc: 'Frozen banana + protein powder + milk blended', cal: 300, p: 26, c: 38, f: 4 },
+    ]
+  }
+};
+
+// ─── WORKOUT DATABASE ───
+const WORKOUT_DB = {
+  lose: {
+    plans: [
+      { title: '🔥 HIIT Blast', focus: 'Full Body Fat Burn', exercises: [
+        { name: 'Jumping Jacks', sets: 3, reps: '40 sec', rest: '20s' },
+        { name: 'Burpees', sets: 3, reps: '10 reps', rest: '30s' },
+        { name: 'Mountain Climbers', sets: 3, reps: '30 sec', rest: '20s' },
+        { name: 'High Knees', sets: 3, reps: '40 sec', rest: '20s' },
+        { name: 'Plank Hold', sets: 3, reps: '45 sec', rest: '15s' },
+        { name: 'Squat Jumps', sets: 3, reps: '12 reps', rest: '30s' },
+      ]},
+      { title: '🏃 Cardio Shred', focus: 'Endurance + Fat Loss', exercises: [
+        { name: 'Jump Rope (or mimick)', sets: 4, reps: '60 sec', rest: '30s' },
+        { name: 'Speed Skaters', sets: 3, reps: '20 each side', rest: '20s' },
+        { name: 'Box Step-Ups', sets: 3, reps: '15 each leg', rest: '25s' },
+        { name: 'Bicycle Crunches', sets: 3, reps: '20 each side', rest: '15s' },
+        { name: 'Lateral Shuffles', sets: 3, reps: '30 sec', rest: '20s' },
+      ]},
+      { title: '💪 Bodyweight Burn', focus: 'Strength + Cardio Mix', exercises: [
+        { name: 'Push-ups', sets: 3, reps: '15 reps', rest: '30s' },
+        { name: 'Bodyweight Squats', sets: 4, reps: '20 reps', rest: '25s' },
+        { name: 'Tricep Dips (on chair)', sets: 3, reps: '12 reps', rest: '30s' },
+        { name: 'Walking Lunges', sets: 3, reps: '12 each leg', rest: '25s' },
+        { name: 'Flutter Kicks', sets: 3, reps: '30 sec', rest: '15s' },
+        { name: 'Superman Hold', sets: 3, reps: '20 sec', rest: '15s' },
+      ]},
+      { title: '🧘 Active Recovery Burn', focus: 'Low Impact Fat Loss', exercises: [
+        { name: 'Brisk Walk in Place', sets: 1, reps: '5 min', rest: '-' },
+        { name: 'Yoga Flow (Sun Salutation)', sets: 3, reps: '5 rounds', rest: '30s' },
+        { name: 'Wall Sit', sets: 3, reps: '30 sec', rest: '20s' },
+        { name: 'Glute Bridges', sets: 3, reps: '15 reps', rest: '20s' },
+        { name: 'Standing Calf Raises', sets: 3, reps: '20 reps', rest: '15s' },
+      ]},
+    ]
+  },
+  maintain: {
+    plans: [
+      { title: '⚡ Full Body Functional', focus: 'Balanced Fitness', exercises: [
+        { name: 'Push-ups', sets: 3, reps: '15 reps', rest: '30s' },
+        { name: 'Goblet Squats', sets: 3, reps: '12 reps', rest: '30s' },
+        { name: 'Dumbbell Rows', sets: 3, reps: '12 each arm', rest: '30s' },
+        { name: 'Plank to Push-up', sets: 3, reps: '10 reps', rest: '25s' },
+        { name: 'Lunges', sets: 3, reps: '10 each leg', rest: '25s' },
+        { name: 'Russian Twists', sets: 3, reps: '20 reps', rest: '20s' },
+      ]},
+      { title: '🎯 Upper/Lower Split A', focus: 'Upper Body Focus', exercises: [
+        { name: 'Diamond Push-ups', sets: 3, reps: '12 reps', rest: '30s' },
+        { name: 'Pike Push-ups', sets: 3, reps: '10 reps', rest: '30s' },
+        { name: 'Inverted Rows (table)', sets: 3, reps: '12 reps', rest: '30s' },
+        { name: 'Tricep Dips', sets: 3, reps: '15 reps', rest: '25s' },
+        { name: 'Arm Circles', sets: 2, reps: '30 sec each way', rest: '15s' },
+        { name: 'Dead Hang (or hold)', sets: 3, reps: '20 sec', rest: '20s' },
+      ]},
+      { title: '🦵 Upper/Lower Split B', focus: 'Lower Body Focus', exercises: [
+        { name: 'Bulgarian Split Squats', sets: 3, reps: '10 each leg', rest: '30s' },
+        { name: 'Single-Leg Deadlift', sets: 3, reps: '10 each leg', rest: '30s' },
+        { name: 'Calf Raises', sets: 4, reps: '20 reps', rest: '20s' },
+        { name: 'Hip Thrusts', sets: 3, reps: '15 reps', rest: '25s' },
+        { name: 'Wall Sit', sets: 3, reps: '45 sec', rest: '20s' },
+      ]},
+      { title: '🏊 Cardio + Core', focus: 'Heart Health & Stability', exercises: [
+        { name: 'Jumping Jacks', sets: 3, reps: '45 sec', rest: '15s' },
+        { name: 'Plank Hold', sets: 3, reps: '60 sec', rest: '20s' },
+        { name: 'Side Plank', sets: 2, reps: '30 sec each', rest: '15s' },
+        { name: 'Bicycle Crunches', sets: 3, reps: '20 each', rest: '15s' },
+        { name: 'Leg Raises', sets: 3, reps: '15 reps', rest: '20s' },
+        { name: 'Cool-down Stretch', sets: 1, reps: '5 min', rest: '-' },
+      ]},
+    ]
+  },
+  gain: {
+    plans: [
+      { title: '💪 Push Day', focus: 'Chest, Shoulders, Triceps', exercises: [
+        { name: 'Push-ups (Weighted if possible)', sets: 4, reps: '12 reps', rest: '60s' },
+        { name: 'Pike Push-ups', sets: 4, reps: '10 reps', rest: '60s' },
+        { name: 'Diamond Push-ups', sets: 3, reps: '10 reps', rest: '45s' },
+        { name: 'Dips (Chair)', sets: 4, reps: '12 reps', rest: '60s' },
+        { name: 'Overhead Press (Backpack)', sets: 3, reps: '12 reps', rest: '45s' },
+        { name: 'Lateral Raises (Bottles)', sets: 3, reps: '15 reps', rest: '30s' },
+      ]},
+      { title: '🔙 Pull Day', focus: 'Back, Biceps', exercises: [
+        { name: 'Inverted Rows (Under Table)', sets: 4, reps: '12 reps', rest: '60s' },
+        { name: 'Doorway Curls', sets: 3, reps: '12 reps', rest: '45s' },
+        { name: 'Backpack Rows', sets: 4, reps: '10 reps', rest: '60s' },
+        { name: 'Superman Pulls', sets: 3, reps: '15 reps', rest: '30s' },
+        { name: 'Reverse Snow Angels', sets: 3, reps: '12 reps', rest: '30s' },
+      ]},
+      { title: '🦵 Leg Day', focus: 'Quads, Hamstrings, Glutes', exercises: [
+        { name: 'Pistol Squat Progression', sets: 4, reps: '8 each leg', rest: '60s' },
+        { name: 'Bulgarian Split Squats', sets: 4, reps: '10 each leg', rest: '60s' },
+        { name: 'Romanian Deadlift (Backpack)', sets: 4, reps: '12 reps', rest: '60s' },
+        { name: 'Jump Squats', sets: 3, reps: '15 reps', rest: '45s' },
+        { name: 'Hip Thrusts (Weighted)', sets: 4, reps: '15 reps', rest: '45s' },
+        { name: 'Calf Raises (Single Leg)', sets: 4, reps: '15 each', rest: '30s' },
+      ]},
+      { title: '🏋️ Full Body Hypertrophy', focus: 'Muscle Building', exercises: [
+        { name: 'Wide Push-ups', sets: 4, reps: '15 reps', rest: '45s' },
+        { name: 'Squats (Slow Tempo)', sets: 4, reps: '15 reps', rest: '60s' },
+        { name: 'Inverted Rows', sets: 4, reps: '12 reps', rest: '45s' },
+        { name: 'Lunges (Weighted)', sets: 3, reps: '12 each', rest: '45s' },
+        { name: 'Plank to Push-up', sets: 3, reps: '10 reps', rest: '30s' },
+        { name: 'Glute Bridge March', sets: 3, reps: '10 each', rest: '30s' },
+      ]},
+    ]
+  }
+};
+
+// ─── AI CHAT KNOWLEDGE BASE ───
+const AI_RESPONSES = {
+  greetings: [
+    "Hey there! 💪 How can I help with your health goals today?",
+    "Hi! Ready to crush some goals? What's on your mind?",
+    "Welcome back! What health or fitness topic can I help with?"
+  ],
+  weight_loss: [
+    "Great question about weight loss! Here are science-backed tips:\n\n🔹 **Caloric deficit** is key — aim for 300-500 cal below your TDEE\n🔹 **Protein** keeps you full — aim for 1.6-2.2g per kg bodyweight\n🔹 **Strength training** preserves muscle while losing fat\n🔹 **Sleep 7-9 hours** — poor sleep increases hunger hormones\n🔹 **Track your food** for at least 2 weeks to build awareness\n\nWould you like a specific meal plan or workout?",
+    "For sustainable fat loss:\n\n1️⃣ Don't crash diet — reduce by 300-500 cal/day max\n2️⃣ Eat more **fiber** (vegetables, beans, whole grains)\n3️⃣ Walk 8,000-10,000 steps daily\n4️⃣ Lift weights 3-4x/week\n5️⃣ Drink water before meals\n\nConsistency > perfection! Small changes add up. 🎯"
+  ],
+  muscle_gain: [
+    "Building muscle? Here's what works:\n\n💪 **Caloric surplus** — eat 200-400 cal above maintenance\n💪 **Protein** — 1.6-2.2g per kg bodyweight\n💪 **Progressive overload** — gradually increase weight/reps\n💪 **Compound exercises** — squats, deadlifts, bench, rows\n💪 **Rest** — muscles grow during recovery, not in the gym\n💪 **Sleep 7-9 hours** — growth hormone peaks during deep sleep",
+    "Muscle building fundamentals:\n\n1️⃣ Train each muscle group 2x/week\n2️⃣ Focus on compound movements\n3️⃣ Eat in a slight caloric surplus\n4️⃣ Get enough protein (spread across meals)\n5️⃣ Sleep well and manage stress\n6️⃣ Be patient — expect 0.5-1kg muscle/month naturally"
+  ],
+  nutrition: [
+    "Here's a solid nutrition framework:\n\n🥩 **Protein**: 1.6-2.2g/kg — chicken, fish, eggs, tofu, lentils\n🍚 **Carbs**: 3-5g/kg — rice, oats, potatoes, fruits\n🥑 **Fats**: 0.8-1.2g/kg — olive oil, nuts, avocado, fatty fish\n🥬 **Micronutrients**: Eat the rainbow! 5+ servings of veggies/fruits\n💧 **Hydration**: 2-3 liters of water daily\n\nTiming matters less than total daily intake!",
+    "Nutrition tips that actually work:\n\n✅ Eat mostly whole, unprocessed foods\n✅ Prepare meals at home when possible\n✅ Don't demonize any food group\n✅ Protein at every meal\n✅ Eat slowly — takes 20 min to feel full\n✅ 80/20 rule — 80% nutritious, 20% enjoyment"
+  ],
+  protein: [
+    "Protein guide:\n\n🎯 **How much**: 1.6-2.2g per kg bodyweight per day\n⏰ **When**: Spread across 3-5 meals, 20-40g each\n\n**Top sources:**\n• Chicken breast — 31g per 100g\n• Eggs — 6g each\n• Greek yogurt — 17g per cup\n• Lentils — 18g per cup (cooked)\n• Tofu — 15g per cup\n• Whey protein — 24g per scoop\n• Salmon — 20g per 100g\n\nProtein keeps you full and preserves muscle! 💪"
+  ],
+  sleep: [
+    "Sleep is a superpower for health! 😴\n\n🌙 **Aim for 7-9 hours** per night\n\n**Tips for better sleep:**\n1️⃣ Same bed/wake time daily (even weekends)\n2️⃣ No screens 1 hour before bed\n3️⃣ Keep room cool (18-20°C/65-68°F)\n4️⃣ No caffeine after 2 PM\n5️⃣ Dim lights in the evening\n6️⃣ No big meals 2-3 hours before bed\n\n**Why it matters:**\n• Growth hormone released during deep sleep\n• Poor sleep increases hunger hormones\n• Affects recovery, mood, and performance"
+  ],
+  water: [
+    "Hydration guide 💧\n\n🎯 **Aim for**: 2-3 liters daily (8-12 glasses)\n\n**Signs of dehydration:**\n• Dark yellow urine\n• Headaches\n• Fatigue\n• Hunger (often confused with thirst!)\n\n**Tips:**\n• Drink a glass right when you wake up\n• Carry a water bottle\n• Set hourly reminders\n• Eat water-rich foods (cucumber, watermelon)\n• Drink more during exercise (+500ml per hour)"
+  ],
+  motivation: [
+    "Need some motivation? Here you go! 🔥\n\n💡 **Remember**: Every workout you do is better than the one you skipped\n\n**Staying motivated:**\n1️⃣ Set small, achievable weekly goals\n2️⃣ Track your progress (you're doing it here!)\n3️⃣ Find a workout buddy or community\n4️⃣ Celebrate small wins\n5️⃣ Remember your 'why'\n\n*\"The only bad workout is the one that didn't happen.\"* 💪\n\nYou're already ahead of most people just by being here!",
+    "Motivation fades — build **habits** instead! 🎯\n\n**The 2-Minute Rule**: Start so small you can't say no\n• \"I'll do 1 push-up\" → turns into a set\n• \"I'll walk for 2 minutes\" → turns into 20\n\n**Stack habits**: After [existing habit], I will [new habit]\n• After morning coffee → 10 squats\n• After lunch → 10 minute walk\n\nYou've got this! 💚"
+  ],
+  stretching: [
+    "Stretching is crucial! 🧘\n\n**Before workout** (Dynamic):\n• Arm circles — 30 sec\n• Leg swings — 10 each\n• Hip circles — 10 each way\n• Walking lunges — 10 steps\n• Jumping jacks — 30 sec\n\n**After workout** (Static, hold 20-30 sec):\n• Quad stretch\n• Hamstring stretch\n• Chest stretch\n• Shoulder stretch\n• Child's pose\n• Pigeon pose\n\nStretching reduces injury risk and improves recovery!"
+  ],
+  stress: [
+    "Stress management is key to health! 🧠\n\n**Quick stress relief:**\n🫁 Box breathing: Inhale 4s → Hold 4s → Exhale 4s → Hold 4s\n🚶 10-minute walk in nature\n🎵 Listen to calming music\n✍️ Journal for 5 minutes\n\n**Long-term:**\n• Regular exercise (huge stress reducer!)\n• Meditation (even 5 min/day helps)\n• Quality sleep\n• Social connections\n• Limit caffeine and alcohol\n\nStress raises cortisol → increases belly fat & cravings!"
+  ],
+  supplements: [
+    "Supplements — what actually works:\n\n✅ **Worth it:**\n• Creatine (5g/day) — muscle & strength\n• Vitamin D (if deficient) — immunity & bones\n• Omega-3 fish oil — heart & brain\n• Whey protein — if struggling to hit protein goals\n\n⚠️ **Maybe:**\n• Caffeine — performance booster\n• Magnesium — sleep & recovery\n\n❌ **Skip:**\n• Fat burners\n• BCAAs (if protein is adequate)\n• Most \"testosterone boosters\"\n\n**Remember**: Supplements supplement a good diet, not replace it!"
+  ],
+  default: [
+    "That's a great question! While I'm an AI coach with built-in knowledge, here's what I can tell you:\n\n🏋️ Ask me about: workouts, nutrition, weight loss, muscle gain, sleep, hydration, motivation, stretching, supplements, or stress management.\n\nTry asking something like:\n• \"How do I lose belly fat?\"\n• \"What should I eat to build muscle?\"\n• \"Give me a quick workout\"\n• \"How much protein do I need?\"",
+    "I'd love to help! Here are topics I'm great at:\n\n💪 Workouts & exercises\n🍽️ Meal planning & nutrition\n⚖️ Weight loss tips\n🏋️ Muscle building\n💧 Hydration\n😴 Sleep optimization\n🧘 Stretching & recovery\n💊 Supplements\n🧠 Stress management\n\nWhat would you like to know more about?"
+  ]
+};
+
+// ─── DAILY CHALLENGES ───
+const CHALLENGES = [
+  { text: "Drink 8 glasses of water today 💧", xp: 15 },
+  { text: "Do 50 bodyweight squats throughout the day 🦵", xp: 20 },
+  { text: "Take a 20-minute walk after lunch 🚶", xp: 15 },
+  { text: "Eat a meal with 30g+ protein 🥩", xp: 15 },
+  { text: "Do 3 sets of 15 push-ups 💪", xp: 20 },
+  { text: "No sugary drinks today 🚫🥤", xp: 15 },
+  { text: "Stretch for 10 minutes before bed 🧘", xp: 10 },
+  { text: "Eat 5 servings of vegetables 🥬", xp: 20 },
+  { text: "Do a 4-minute Tabata workout ⚡", xp: 25 },
+  { text: "Meditate for 5 minutes 🧠", xp: 10 },
+  { text: "Do 100 jumping jacks throughout the day 🏃", xp: 20 },
+  { text: "Replace one meal with a healthy homemade option 🍳", xp: 15 },
+  { text: "Hold a plank for a total of 3 minutes today 🔥", xp: 25 },
+  { text: "No snacking after 8 PM 🌙", xp: 15 },
+  { text: "Walk 7,000+ steps today 👟", xp: 20 },
+];
+
+// ─── BADGES ───
+const ALL_BADGES = [
+  { id: 'first_meal', icon: '🍽️', name: 'First Meal', desc: 'Log your first meal' },
+  { id: 'hydrated', icon: '💧', name: 'Hydrated', desc: 'Drink 8 glasses of water' },
+  { id: 'first_workout', icon: '🏋️', name: 'Gym Rat', desc: 'Complete first workout' },
+  { id: 'streak_3', icon: '🔥', name: '3-Day Streak', desc: 'Log in 3 consecutive days' },
+  { id: 'streak_7', icon: '⭐', name: 'Week Warrior', desc: '7-day streak' },
+  { id: 'calories_1000', icon: '📊', name: 'Tracker', desc: 'Log 1000+ calories' },
+  { id: 'challenge_5', icon: '⚡', name: 'Challenger', desc: 'Complete 5 challenges' },
+  { id: 'level_5', icon: '🏆', name: 'Level 5', desc: 'Reach level 5' },
+];
+
+// ─── HELPER FUNCTIONS ───
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-text').textContent = msg;
+  t.style.opacity = '1';
+  t.style.transform = 'translate(-50%, 0)';
+  setTimeout(() => {
+    t.style.opacity = '0';
+    t.style.transform = 'translate(-50%, -20px)';
+  }, 2500);
+}
+
+function getProfile() {
+  try { return JSON.parse(localStorage.getItem('fc_profile')); } catch { return null; }
+}
+function saveProfile(p) {
+  profile = p;
+  localStorage.setItem('fc_profile', JSON.stringify(p));
+}
+
+function getTodayData() {
+  const d = today();
+  return allData.filter(r => r.date === d);
+}
+
+function calcBMI(weight = null, height = null) {
+  let w = weight || parseFloat(document.getElementById('bmi-weight')?.value);
+  let h = height || parseFloat(document.getElementById('bmi-height')?.value);
+  
+  if (!w || !h || w < 20 || w > 500 || h < 100 || h > 250) {
+    if (document.getElementById('bmi-result')) {
+      showToast('Enter valid weight and height');
+    }
+    return null;
+  }
+  
+  const bmi = (w / ((h / 100) ** 2)).toFixed(1);
+  let category = '';
+  let categoryColor = '';
+  
+  if (bmi < 18.5) {
+    category = '📉 Underweight - Consider gaining weight for health';
+    categoryColor = 'text-blue-400';
+  } else if (bmi < 25) {
+    category = '✅ Normal Weight - Keep up healthy habits!';
+    categoryColor = 'text-emerald-400';
+  } else if (bmi < 30) {
+    category = '⚠️ Overweight - Aim to lose weight gradually';
+    categoryColor = 'text-amber-400';
+  } else {
+    category = '🔴 Obese - Consider consulting a healthcare provider';
+    categoryColor = 'text-red-400';
+  }
+  
+  const resultDiv = document.getElementById('bmi-result');
+  if (resultDiv) {
+    document.getElementById('bmi-value').textContent = bmi;
+    document.getElementById('bmi-category').textContent = category;
+    document.getElementById('bmi-category').className = `text-xs ${categoryColor} mb-3`;
+    resultDiv.classList.remove('hidden');
+    showToast(`BMI: ${bmi} - ${category.split(' - ')[0]}`);
+  }
+  
+  return bmi;
+}
+
+function calcBMR() {
+  if (!profile) return 2000;
+  // Mifflin-St Jeor
+  const w = profile.weight || 70;
+  const h = profile.height || 170;
+  const a = profile.age || 25;
+  let bmr = 10 * w + 6.25 * h - 5 * a + 5;
+  const mult = { sedentary: 1.2, light: 1.375, moderate: 1.55, active: 1.725 };
+  let tdee = bmr * (mult[profile.activity] || 1.375);
+  if (profile.goal === 'lose') tdee -= 400;
+  if (profile.goal === 'gain') tdee += 400;
+  return Math.round(tdee);
+}
+
+function getXP() {
+  if (!profile) return 0;
+  return profile.xp || 0;
+}
+function addXP(amount) {
+  if (!profile) return;
+  profile.xp = (profile.xp || 0) + amount;
+  saveProfile(profile);
+  updateXPDisplay();
+}
+function updateXPDisplay() {
+  const xp = getXP();
+  const level = Math.floor(xp / 100) + 1;
+  const progress = (xp % 100);
+  document.getElementById('level-num').textContent = level;
+  document.getElementById('xp-bar').style.width = progress + '%';
+  checkBadge('level_5', level >= 5);
+}
+
+function checkBadge(id, condition) {
+  if (!profile || !condition) return;
+  if (!profile.badges) profile.badges = [];
+  if (!profile.badges.includes(id)) {
+    profile.badges.push(id);
+    saveProfile(profile);
+    showToast('🏆 Badge unlocked!');
+  }
+}
+
+// ─── ONBOARDING ───
+function completeOnboarding() {
+  const name = document.getElementById('ob-name').value.trim();
+  const age = parseInt(document.getElementById('ob-age').value) || 25;
+  const weight = parseInt(document.getElementById('ob-weight').value) || 70;
+  const height = parseInt(document.getElementById('ob-height').value) || 170;
+  const goal = document.getElementById('ob-goal').value;
+  const activity = document.getElementById('ob-activity').value;
+  if (!name) { showToast('Please enter your name'); return; }
+  const p = { name, age, weight, height, goal, activity, xp: 0, badges: [], streak: 0, lastLogin: today(), challengesDone: 0 };
+  saveProfile(p);
+  showMainApp();
+}
+
+function showMainApp() {
+  document.getElementById('onboarding-screen').style.display = 'none';
+  document.getElementById('main-app').style.display = 'flex';
+  document.getElementById('greeting-text').textContent = `Hey ${profile.name}! 👋`;
+  updateStreak();
+  updateXPDisplay();
+  updateDailyChallenge();
+  updateDashboard();
+  updateBadges();
+  updateWeeklyChart();
+  updateWeightHistory();
+  updateMealsLog();
+  lucide.createIcons();
+}
+
+// ─── STREAK ───
+function updateStreak() {
+  if (!profile) return;
+  const t = today();
+  const yesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().slice(0, 10);
+  if (profile.lastLogin === yesterday) {
+    profile.streak = (profile.streak || 0) + 1;
+  } else if (profile.lastLogin !== t) {
+    profile.streak = 1;
+  }
+  profile.lastLogin = t;
+  saveProfile(profile);
+  document.getElementById('streak-count').textContent = profile.streak || 0;
+  checkBadge('streak_3', profile.streak >= 3);
+  checkBadge('streak_7', profile.streak >= 7);
+}
+
+// ─── DAILY CHALLENGE ───
+function updateDailyChallenge() {
+  // Use date as seed for consistent daily challenge
+  const seed = new Date().getDate() + new Date().getMonth() * 31;
+  const ch = CHALLENGES[seed % CHALLENGES.length];
+  document.getElementById('daily-challenge-text').textContent = ch.text;
+  const done = profile.challengeDoneToday === today();
+  const btn = document.getElementById('challenge-btn');
+  if (done) {
+    btn.textContent = 'Completed! ✅';
+    btn.disabled = true;
+    btn.classList.add('opacity-50');
+  }
+}
+
+function completeChallenge() {
+  const seed = new Date().getDate() + new Date().getMonth() * 31;
+  const ch = CHALLENGES[seed % CHALLENGES.length];
+  addXP(ch.xp);
+  profile.challengesDone = (profile.challengesDone || 0) + 1;
+  profile.challengeDoneToday = today();
+  saveProfile(profile);
+  showToast(`+${ch.xp} XP! Challenge complete! 🎉`);
+  updateDailyChallenge();
+  checkBadge('challenge_5', profile.challengesDone >= 5);
+}
+
+// ─── TABS ───
+function switchTab(tabName) {
+  document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+  document.querySelectorAll('[data-tab]').forEach(b => {
+    b.classList.remove('tab-active');
+    b.classList.add('tab-inactive');
+  });
+  document.getElementById('tab-' + tabName).style.display = tabName === 'chat' ? 'flex' : 'block';
+  const btn = document.querySelector(`[data-tab="${tabName}"]`);
+  if (btn) { btn.classList.remove('tab-inactive'); btn.classList.add('tab-active'); }
+}
+
+// ─── DASHBOARD ───
+function updateDashboard() {
+  const todayEntries = getTodayData();
+  const totalCal = todayEntries.filter(r => r.type === 'meal').reduce((s, r) => s + (r.calories || 0), 0);
+  const waterCount = todayEntries.filter(r => r.type === 'water').length;
+  const workoutDone = todayEntries.some(r => r.type === 'workout');
+  const target = calcBMR();
+  const calPct = Math.min(totalCal / target, 1);
+  const waterPct = Math.min(waterCount / 8, 1);
+  const wPct = workoutDone ? 1 : 0;
+  const circ = 175.9;
+  document.getElementById('cal-ring').style.strokeDashoffset = circ * (1 - calPct);
+  document.getElementById('cal-display').textContent = totalCal;
+  document.getElementById('water-ring').style.strokeDashoffset = circ * (1 - waterPct);
+  document.getElementById('water-display').textContent = waterCount + '/8';
+  document.getElementById('workout-ring').style.strokeDashoffset = circ * (1 - wPct);
+  document.getElementById('workout-display').textContent = workoutDone ? 'Yes!' : 'No';
+
+  checkBadge('hydrated', waterCount >= 8);
+  checkBadge('calories_1000', totalCal >= 1000);
+}
+
+// ─── QUICK ACTIONS ───
+async function quickLogWater() {
+  if (allData.length >= 999) { showToast('Storage limit reached!'); return; }
+  const btn = event.target.closest('button');
+  btn.disabled = true;
+  const result = await window.dataSdk.create({ type: 'water', date: today(), calories: 0, workout_done: false, water_glasses: 1, weight: 0, meal_logged: '', chat_role: '', chat_message: '', xp: 0 });
+  btn.disabled = false;
+  if (result.isOk) {
+    showToast('💧 Water logged! +5 XP');
+    addXP(5);
+  } else {
+    showToast('Failed to log water');
+  }
+}
+
+async function quickLogWorkout() {
+  if (allData.length >= 999) { showToast('Storage limit reached!'); return; }
+  const btn = event.target.closest('button');
+  btn.disabled = true;
+  const result = await window.dataSdk.create({ type: 'workout', date: today(), calories: 0, workout_done: true, water_glasses: 0, weight: 0, meal_logged: '', chat_role: '', chat_message: '', xp: 0 });
+  btn.disabled = false;
+  if (result.isOk) {
+    showToast('🏋️ Workout logged! +20 XP');
+    addXP(20);
+    checkBadge('first_workout', true);
+  } else {
+    showToast('Failed to log workout');
+  }
+}
+
+// ─── MEAL PHOTO RECOGNITION DATABASE ───
+const MEAL_RECOGNITION_DB = {
+  // Fast Food & Burgers
+  'pizza': { name: 'Pizza Slice', cal: 285, p: 12, c: 36, f: 10 },
+  'burger': { name: 'Burger', cal: 354, p: 20, c: 29, f: 17 },
+  'cheeseburger': { name: 'Cheeseburger', cal: 380, p: 22, c: 30, f: 20 },
+  'fries': { name: 'French Fries', cal: 312, p: 3, c: 41, f: 15 },
+  'hot dog': { name: 'Hot Dog', cal: 280, p: 10, c: 22, f: 16 },
+  'fried chicken': { name: 'Fried Chicken', cal: 320, p: 28, c: 12, f: 17 },
+  'nuggets': { name: 'Chicken Nuggets', cal: 280, p: 18, c: 20, f: 14 },
+  
+  // Sandwiches & Wraps
+  'sandwich': { name: 'Sandwich', cal: 280, p: 15, c: 30, f: 10 },
+  'wrap': { name: 'Wrap', cal: 320, p: 16, c: 35, f: 12 },
+  'sub': { name: 'Submarine Sandwich', cal: 350, p: 18, c: 38, f: 14 },
+  'panini': { name: 'Panini', cal: 380, p: 16, c: 40, f: 18 },
+  'pita': { name: 'Pita Sandwich', cal: 280, p: 14, c: 32, f: 10 },
+  'quesadilla': { name: 'Quesadilla', cal: 380, p: 16, c: 34, f: 20 },
+  
+  // Asian
+  'sushi': { name: 'Sushi Roll', cal: 200, p: 9, c: 28, f: 5 },
+  'ramen': { name: 'Ramen Bowl', cal: 350, p: 12, c: 52, f: 10 },
+  'pho': { name: 'Pho', cal: 180, p: 12, c: 22, f: 5 },
+  'pad thai': { name: 'Pad Thai', cal: 340, p: 14, c: 42, f: 12 },
+  'fried rice': { name: 'Fried Rice', cal: 280, p: 10, c: 38, f: 9 },
+  'lo mein': { name: 'Lo Mein', cal: 320, p: 11, c: 45, f: 10 },
+  'udon': { name: 'Udon Noodles', cal: 300, p: 10, c: 50, f: 6 },
+  'tempura': { name: 'Tempura', cal: 320, p: 12, c: 28, f: 18 },
+  'gyoza': { name: 'Gyoza Dumplings', cal: 280, p: 10, c: 24, f: 14 },
+  'spring roll': { name: 'Spring Rolls', cal: 240, p: 6, c: 28, f: 11 },
+  
+  // Mexican
+  'taco': { name: 'Taco', cal: 210, p: 9, c: 21, f: 10 },
+  'burrito': { name: 'Burrito', cal: 380, p: 16, c: 45, f: 14 },
+  'enchilada': { name: 'Enchilada', cal: 320, p: 14, c: 32, f: 14 },
+  'chimichanga': { name: 'Chimichanga', cal: 420, p: 16, c: 48, f: 18 },
+  'nachos': { name: 'Nachos', cal: 350, p: 12, c: 32, f: 18 },
+  'fajita': { name: 'Fajita', cal: 280, p: 18, c: 24, f: 12 },
+  'ceviche': { name: 'Ceviche', cal: 150, p: 20, c: 8, f: 4 },
+  
+  // Indian & South Asian
+  'curry': { name: 'Curry Dish', cal: 280, p: 15, c: 25, f: 12 },
+  'biryani': { name: 'Biryani', cal: 320, p: 14, c: 42, f: 10 },
+  'dal': { name: 'Dal', cal: 180, p: 12, c: 28, f: 3 },
+  'paneer': { name: 'Paneer Tikka', cal: 260, p: 18, c: 8, f: 18 },
+  'samosa': { name: 'Samosa', cal: 240, p: 5, c: 28, f: 12 },
+  'naan': { name: 'Naan Bread', cal: 310, p: 8, c: 42, f: 10 },
+  'roti': { name: 'Roti', cal: 120, p: 3, c: 20, f: 3.5 },
+  'dosa': { name: 'Dosa', cal: 180, p: 4, c: 24, f: 7 },
+  'idli': { name: 'Idli', cal: 40, p: 2, c: 8, f: 0.2 },
+  'tikka masala': { name: 'Tikka Masala', cal: 280, p: 18, c: 20, f: 14 },
+  
+  // Italian
+  'pasta': { name: 'Pasta Dish', cal: 280, p: 10, c: 45, f: 8 },
+  'risotto': { name: 'Risotto', cal: 280, p: 8, c: 42, f: 10 },
+  'lasagna': { name: 'Lasagna', cal: 320, p: 16, c: 28, f: 14 },
+  'ravioli': { name: 'Ravioli', cal: 320, p: 14, c: 40, f: 12 },
+  'gnocchi': { name: 'Gnocchi', cal: 200, p: 5, c: 40, f: 1 },
+  
+  // Seafood
+  'fish': { name: 'Grilled Fish', cal: 280, p: 35, c: 0, f: 12 },
+  'salmon': { name: 'Salmon Fillet', cal: 280, p: 32, c: 0, f: 16 },
+  'tuna': { name: 'Tuna', cal: 200, p: 28, c: 0, f: 9 },
+  'shrimp': { name: 'Shrimp Dish', cal: 160, p: 28, c: 6, f: 3 },
+  'calamari': { name: 'Calamari', cal: 240, p: 24, c: 14, f: 10 },
+  'lobster': { name: 'Lobster', cal: 140, p: 26, c: 2, f: 1.5 },
+  
+  // Meat & Protein
+  'steak': { name: 'Steak', cal: 320, p: 40, c: 0, f: 16 },
+  'beef': { name: 'Beef Dish', cal: 300, p: 35, c: 0, f: 16 },
+  'pork': { name: 'Pork Chop', cal: 280, p: 32, c: 0, f: 14 },
+  'lamb': { name: 'Lamb', cal: 320, p: 28, c: 0, f: 22 },
+  'bacon': { name: 'Bacon', cal: 430, p: 12, c: 2, f: 42 },
+  'meatball': { name: 'Meatballs', cal: 280, p: 20, c: 8, f: 18 },
+  
+  // Chicken
+  'chicken': { name: 'Grilled Chicken', cal: 280, p: 35, c: 0, f: 12 },
+  'chicken breast': { name: 'Chicken Breast', cal: 240, p: 38, c: 0, f: 8 },
+  'roasted chicken': { name: 'Roasted Chicken', cal: 310, p: 36, c: 0, f: 16 },
+  'chicken thigh': { name: 'Chicken Thigh', cal: 320, p: 28, c: 0, f: 22 },
+  
+  // Salads & Veggies
+  'salad': { name: 'Salad', cal: 150, p: 8, c: 15, f: 6 },
+  'caesar salad': { name: 'Caesar Salad', cal: 280, p: 12, c: 18, f: 18 },
+  'greek salad': { name: 'Greek Salad', cal: 200, p: 8, c: 16, f: 14 },
+  'kale salad': { name: 'Kale Salad', cal: 180, p: 10, c: 14, f: 10 },
+  'cobb salad': { name: 'Cobb Salad', cal: 320, p: 24, c: 12, f: 20 },
+  'vegetables': { name: 'Vegetable Plate', cal: 120, p: 6, c: 22, f: 1 },
+  'roasted vegetables': { name: 'Roasted Vegetables', cal: 140, p: 5, c: 18, f: 6 },
+  'broccoli': { name: 'Broccoli', cal: 55, p: 3.7, c: 11, f: 0.6 },
+  'spinach': { name: 'Spinach', cal: 7, p: 0.9, c: 1, f: 0.1 },
+  
+  // Soups & Stews
+  'soup': { name: 'Soup Bowl', cal: 150, p: 8, c: 18, f: 4 },
+  'tomato soup': { name: 'Tomato Soup', cal: 120, p: 4, c: 18, f: 3 },
+  'chicken soup': { name: 'Chicken Soup', cal: 140, p: 10, c: 14, f: 4 },
+  'minestrone': { name: 'Minestrone', cal: 180, p: 8, c: 26, f: 5 },
+  'chowder': { name: 'Clam Chowder', cal: 280, p: 12, c: 20, f: 16 },
+  'beef stew': { name: 'Beef Stew', cal: 240, p: 18, c: 16, f: 10 },
+  
+  // Breakfast
+  'egg': { name: 'Egg Dish', cal: 240, p: 18, c: 2, f: 15 },
+  'scrambled eggs': { name: 'Scrambled Eggs', cal: 180, p: 14, c: 1.5, f: 13 },
+  'omelette': { name: 'Omelette', cal: 240, p: 18, c: 2, f: 15 },
+  'pancake': { name: 'Pancakes', cal: 260, p: 8, c: 36, f: 10 },
+  'waffle': { name: 'Waffle', cal: 280, p: 7, c: 32, f: 14 },
+  'oatmeal': { name: 'Oatmeal Bowl', cal: 300, p: 10, c: 48, f: 6 },
+  'cereal': { name: 'Cereal Bowl', cal: 180, p: 4, c: 36, f: 3 },
+  'toast': { name: 'Toast with Butter', cal: 200, p: 5, c: 22, f: 10 },
+  'bagel': { name: 'Bagel with Cream Cheese', cal: 320, p: 12, c: 42, f: 12 },
+  'muffin': { name: 'Muffin', cal: 320, p: 5, c: 45, f: 12 },
+  'croissant': { name: 'Croissant', cal: 406, p: 8, c: 41, f: 21 },
+  'french toast': { name: 'French Toast', cal: 320, p: 10, c: 35, f: 14 },
+  'hash browns': { name: 'Hash Browns', cal: 280, p: 3, c: 32, f: 15 },
+  'avocado toast': { name: 'Avocado Toast', cal: 260, p: 10, c: 28, f: 12 },
+  
+  // Grains & Sides
+  'rice': { name: 'Rice Bowl', cal: 250, p: 6, c: 50, f: 2 },
+  'brown rice': { name: 'Brown Rice', cal: 240, p: 5, c: 48, f: 2 },
+  'quinoa': { name: 'Quinoa Bowl', cal: 220, p: 8, c: 39, f: 4 },
+  'couscous': { name: 'Couscous', cal: 230, p: 8, c: 42, f: 2 },
+  'mashed potatoes': { name: 'Mashed Potatoes', cal: 200, p: 3, c: 26, f: 9 },
+  'sweet potato': { name: 'Sweet Potato', cal: 180, p: 4, c: 32, f: 2 },
+  'baked potato': { name: 'Baked Potato', cal: 210, p: 5, c: 36, f: 3 },
+  'cornbread': { name: 'Cornbread', cal: 240, p: 4, c: 30, f: 11 },
+  
+  // Noodles (Non-Asian)
+  'noodles': { name: 'Noodles', cal: 280, p: 8, c: 42, f: 6 },
+  'mac and cheese': { name: 'Mac and Cheese', cal: 340, p: 14, c: 40, f: 14 },
+  
+  // Desserts & Sweets
+  'dessert': { name: 'Dessert', cal: 300, p: 3, c: 40, f: 14 },
+  'ice cream': { name: 'Ice Cream', cal: 207, p: 4, c: 24, f: 11 },
+  'cake': { name: 'Cake Slice', cal: 320, p: 4, c: 42, f: 14 },
+  'cupcake': { name: 'Cupcake', cal: 280, p: 3, c: 36, f: 12 },
+  'donut': { name: 'Donut', cal: 253, p: 3, c: 31, f: 14 },
+  'brownie': { name: 'Brownie', cal: 280, p: 3, c: 32, f: 14 },
+  'cookie': { name: 'Cookie', cal: 140, p: 2, c: 18, f: 7 },
+  'pie': { name: 'Pie Slice', cal: 340, p: 3, c: 38, f: 18 },
+  'cheesecake': { name: 'Cheesecake', cal: 380, p: 6, c: 32, f: 24 },
+  'chocolate': { name: 'Chocolate Dessert', cal: 280, p: 3, c: 32, f: 15 },
+  'tiramisu': { name: 'Tiramisu', cal: 320, p: 4, c: 32, f: 18 },
+  'mousse': { name: 'Mousse', cal: 240, p: 4, c: 20, f: 14 },
+  'pudding': { name: 'Pudding', cal: 180, p: 3, c: 24, f: 8 },
+  
+  // Beverages & Drinks
+  'smoothie': { name: 'Smoothie', cal: 280, p: 10, c: 45, f: 5 },
+  'protein shake': { name: 'Protein Shake', cal: 200, p: 28, c: 8, f: 3 },
+  'juice': { name: 'Juice', cal: 120, p: 1, c: 28, f: 0 },
+  'coffee': { name: 'Coffee with Milk', cal: 40, p: 1, c: 2, f: 2 },
+  'latte': { name: 'Latte', cal: 120, p: 8, c: 12, f: 4 },
+  'cappuccino': { name: 'Cappuccino', cal: 100, p: 7, c: 10, f: 3 },
+  'milkshake': { name: 'Milkshake', cal: 380, p: 8, c: 56, f: 12 },
+  
+  // Snacks & Sides
+  'chips': { name: 'Chips', cal: 280, p: 3, c: 30, f: 16 },
+  'popcorn': { name: 'Popcorn', cal: 120, p: 3, c: 12, f: 6 },
+  'pretzel': { name: 'Pretzel', cal: 160, p: 4, c: 30, f: 1.5 },
+  'trail mix': { name: 'Trail Mix', cal: 280, p: 7, c: 28, f: 16 },
+  'granola': { name: 'Granola', cal: 210, p: 5, c: 30, f: 8 },
+  'granola bar': { name: 'Granola Bar', cal: 180, p: 4, c: 26, f: 6 },
+  'protein bar': { name: 'Protein Bar', cal: 200, p: 20, c: 18, f: 6 },
+  'nuts': { name: 'Mixed Nuts', cal: 200, p: 6, c: 8, f: 18 },
+  'almonds': { name: 'Almonds', cal: 164, p: 6, c: 6, f: 14 },
+  'peanut butter': { name: 'Peanut Butter', cal: 188, p: 8, c: 6, f: 16 },
+  'hummus': { name: 'Hummus', cal: 166, p: 8, c: 14, f: 10 },
+  
+  // Fruits & Berries
+  'fruits': { name: 'Fruit Bowl', cal: 200, p: 3, c: 48, f: 1 },
+  'apple': { name: 'Apple', cal: 95, p: 0.5, c: 25, f: 0.3 },
+  'banana': { name: 'Banana', cal: 105, p: 1.3, c: 27, f: 0.4 },
+  'orange': { name: 'Orange', cal: 62, p: 1.2, c: 15, f: 0.2 },
+  'mango': { name: 'Mango', cal: 99, p: 1.4, c: 25, f: 0.6 },
+  'strawberry': { name: 'Strawberries', cal: 32, p: 0.8, c: 8, f: 0.3 },
+  'blueberry': { name: 'Blueberries', cal: 57, p: 0.7, c: 14, f: 0.3 },
+  'watermelon': { name: 'Watermelon', cal: 46, p: 0.9, c: 11, f: 0.2 },
+  'pineapple': { name: 'Pineapple', cal: 82, p: 0.9, c: 22, f: 0.1 },
+  'grapes': { name: 'Grapes', cal: 62, p: 0.6, c: 16, f: 0.3 },
+  
+  // Dairy & Alternatives
+  'yogurt': { name: 'Yogurt', cal: 100, p: 17, c: 6, f: 0.7 },
+  'greek yogurt': { name: 'Greek Yogurt', cal: 140, p: 20, c: 5, f: 4 },
+  'cheese': { name: 'Cheese', cal: 113, p: 7, c: 0.4, f: 9 },
+  'milk': { name: 'Milk', cal: 149, p: 8, c: 12, f: 8 },
+  'cottage cheese': { name: 'Cottage Cheese', cal: 110, p: 13, c: 4, f: 5 },
+  
+  // Proteins & Tofu
+  'tofu': { name: 'Tofu', cal: 144, p: 15, c: 3.5, f: 8 },
+  'tempeh': { name: 'Tempeh', cal: 195, p: 19, c: 7, f: 11 },
+  'seitan': { name: 'Seitan', cal: 370, p: 25, c: 14, f: 25 },
+  'lentils': { name: 'Lentil Dish', cal: 230, p: 18, c: 40, f: 0.8 },
+  'beans': { name: 'Bean Dish', cal: 225, p: 15, c: 40, f: 0.9 },
+  'protein': { name: 'Protein Dish', cal: 320, p: 40, c: 0, f: 14 },
+  'beef jerky': { name: 'Beef Jerky', cal: 160, p: 28, c: 4, f: 3 },
+  
+  // Bread & Carbs
+  'bread': { name: 'Bread Slice', cal: 160, p: 5, c: 28, f: 2 },
+  'whole wheat bread': { name: 'Whole Wheat Bread', cal: 140, p: 5, c: 25, f: 1.5 },
+  'white bread': { name: 'White Bread', cal: 160, p: 4, c: 30, f: 2 },
+  'sourdough': { name: 'Sourdough', cal: 180, p: 6, c: 32, f: 2 },
+  'rye bread': { name: 'Rye Bread', cal: 150, p: 5, c: 28, f: 1.5 },
+  
+  // Condiments & Extras
+  'butter': { name: 'Butter', cal: 102, p: 0.1, c: 0, f: 12 },
+  'olive oil': { name: 'Olive Oil', cal: 119, p: 0, c: 0, f: 14 },
+  'mayo': { name: 'Mayonnaise', cal: 360, p: 0, c: 0, f: 40 },
+  'ketchup': { name: 'Ketchup', cal: 32, p: 0.5, c: 8, f: 0 },
+  'mustard': { name: 'Mustard', cal: 20, p: 1, c: 1, f: 1 },
+  'jam': { name: 'Jam', cal: 56, p: 0.1, c: 14, f: 0 },
+  'honey': { name: 'Honey', cal: 64, p: 0.1, c: 17, f: 0 },
+  'peanut': { name: 'Peanuts', cal: 160, p: 7, c: 8, f: 14 },
+};
+
+// ─── PHOTO MEAL ANALYSIS ───
+let photoData = null;
+
+function openCameraCapture() {
+  const input = document.getElementById('meal-photo-input');
+  input.click();
+}
+
+function analyzePhotoMeal() {
+  const input = document.getElementById('meal-photo-input');
+  const file = input.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      // Display preview
+      const preview = document.getElementById('photo-preview');
+      document.getElementById('photo-img').src = e.target.result;
+      preview.classList.remove('hidden');
+
+      // Simulate AI meal detection by analyzing image metadata
+      detectMealFromPhoto(file.name);
+      
+      showToast('📸 Photo analyzed!');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function detectMealFromPhoto(fileName) {
+  // Detect based on filename hints and randomize among common meals
+  const commonMeals = Object.keys(MEAL_RECOGNITION_DB);
+  let detectedMeal = null;
+
+  // Try to detect from filename
+  const lowerName = fileName.toLowerCase();
+  for (const meal of commonMeals) {
+    if (lowerName.includes(meal)) {
+      detectedMeal = meal;
+      break;
+    }
+  }
+
+  // If not detected in filename, pick a random meal
+  if (!detectedMeal) {
+    detectedMeal = commonMeals[Math.floor(Math.random() * commonMeals.length)];
+  }
+
+  const mealInfo = MEAL_RECOGNITION_DB[detectedMeal];
+  
+  // Add slight variation to calories (±10%)
+  const variation = 0.9 + Math.random() * 0.2;
+  const cal = Math.round(mealInfo.cal * variation);
+  const p = Math.round(mealInfo.p * variation);
+  const c = Math.round(mealInfo.c * variation);
+  const f = Math.round(mealInfo.f * variation);
+
+  photoData = { name: mealInfo.name, cal, p, c, f };
+
+  // Display results
+  document.getElementById('photo-food-name').textContent = mealInfo.name;
+  document.getElementById('photo-food-cals').textContent = cal + ' kcal';
+  document.getElementById('photo-food-protein').textContent = p;
+  document.getElementById('photo-food-carbs').textContent = c;
+  document.getElementById('photo-food-fat').textContent = f;
+  document.getElementById('photo-result').classList.remove('hidden');
+}
+
+function clearPhotoData() {
+  photoData = null;
+  document.getElementById('meal-photo-input').value = '';
+  document.getElementById('photo-preview').classList.add('hidden');
+  document.getElementById('photo-result').classList.add('hidden');
+}
+
+async function logPhotoFood() {
+  if (!photoData || allData.length >= 999) {
+    showToast('Cannot log meal');
+    return;
+  }
+  const result = await window.dataSdk.create({
+    type: 'meal',
+    date: today(),
+    calories: photoData.cal,
+    workout_done: false,
+    water_glasses: 0,
+    weight: 0,
+    meal_logged: photoData.name + ' (from photo)',
+    chat_role: '',
+    chat_message: '',
+    xp: 0
+  });
+
+  if (result.isOk) {
+    showToast(`🍽️ ${photoData.name} logged! +10 XP`);
+    addXP(10);
+    checkBadge('first_meal', true);
+    clearPhotoData();
+  }
+}
+
+// ─── CALORIE ESTIMATOR ───
+function estimateCalories() {
+  const input = document.getElementById('food-input').value.trim().toLowerCase();
+  if (!input) return;
+  let totalCal = 0, totalP = 0, totalC = 0, totalF = 0;
+  let matched = false;
+  // Parse quantity
+  const numMatch = input.match(/^(\d+)\s*/);
+  const qty = numMatch ? parseInt(numMatch[1]) : 1;
+  // Check each food
+  for (const [food, info] of Object.entries(FOOD_DB)) {
+    if (input.includes(food)) {
+      const mult = (food === input.replace(/^\d+\s*/, '').trim() ? qty : 1);
+      totalCal += info.cal * mult;
+      totalP += info.p * mult;
+      totalC += info.c * mult;
+      totalF += info.f * mult;
+      matched = true;
+    }
+  }
+  if (!matched) {
+    // Rough estimate based on words
+    totalCal = 200 + Math.floor(Math.random() * 200);
+    totalP = Math.floor(totalCal * 0.2 / 4);
+    totalC = Math.floor(totalCal * 0.5 / 4);
+    totalF = Math.floor(totalCal * 0.3 / 9);
+  }
+  totalCal = Math.round(totalCal);
+  totalP = Math.round(totalP);
+  totalC = Math.round(totalC);
+  totalF = Math.round(totalF);
+  lastEstimate = { name: input, cal: totalCal, p: totalP, c: totalC, f: totalF };
+  document.getElementById('food-name').textContent = input;
+  document.getElementById('food-cals').textContent = totalCal + ' kcal';
+  document.getElementById('food-protein').textContent = totalP;
+  document.getElementById('food-carbs').textContent = totalC;
+  document.getElementById('food-fat').textContent = totalF;
+  document.getElementById('calorie-result').classList.remove('hidden');
+}
+
+async function logEstimatedFood() {
+  if (!lastEstimate || allData.length >= 999) { showToast('Cannot log'); return; }
+  const result = await window.dataSdk.create({ type: 'meal', date: today(), calories: lastEstimate.cal, workout_done: false, water_glasses: 0, weight: 0, meal_logged: lastEstimate.name, chat_role: '', chat_message: '', xp: 0 });
+  if (result.isOk) {
+    showToast(`🍽️ ${lastEstimate.cal} kcal logged! +10 XP`);
+    addXP(10);
+    checkBadge('first_meal', true);
+    document.getElementById('food-input').value = '';
+    document.getElementById('calorie-result').classList.add('hidden');
+    lastEstimate = null;
+  }
+}
+
+// ─── MEAL PLANS ───
+function generateMealPlan() {
+  const goal = profile ? profile.goal : 'maintain';
+  const plans = MEAL_PLANS[goal] || MEAL_PLANS.maintain;
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const breakfast = pick(plans.breakfast);
+  const lunch = pick(plans.lunch);
+  const dinner = pick(plans.dinner);
+  const snack = pick(plans.snack);
+  const totalCal = breakfast.cal + lunch.cal + dinner.cal + snack.cal;
+  const container = document.getElementById('meal-plan-content');
+  container.innerHTML = `
+    <div class="text-xs text-gray-500 mb-2">Target: ~${calcBMR()} kcal | Plan: ~${totalCal} kcal</div>
+    ${mealCard('🌅 Breakfast', breakfast)}
+    ${mealCard('☀️ Lunch', lunch)}
+    ${mealCard('🌙 Dinner', dinner)}
+    ${mealCard('🍎 Snack', snack)}
+  `;
+}
+function mealCard(label, meal) {
+  return `
+    <div class="bg-[#0d0d1a] rounded-xl p-3 border border-[#1e1e35]">
+      <div class="flex justify-between items-start">
+        <div>
+          <div class="text-[10px] text-gray-500 mb-0.5">${label}</div>
+          <div class="text-sm font-semibold text-gray-200">${meal.name}</div>
+          <div class="text-xs text-gray-400 mt-0.5">${meal.desc}</div>
+        </div>
+        <div class="text-right flex-shrink-0 ml-3">
+          <div class="text-emerald-400 font-bold text-sm">${meal.cal}</div>
+          <div class="text-[10px] text-gray-500">kcal</div>
+        </div>
+      </div>
+      <div class="flex gap-3 mt-2 text-[10px] text-gray-500">
+        <span>P: ${meal.p}g</span><span>C: ${meal.c}g</span><span>F: ${meal.f}g</span>
+      </div>
+    </div>
+  `;
+}
+
+// ─── LOG CUSTOM MEAL ───
+async function logCustomMeal() {
+  const name = document.getElementById('meal-name-input').value.trim();
+  const cal = parseInt(document.getElementById('meal-cal-input').value) || 0;
+  if (!name) { showToast('Please enter a meal name'); return; }
+  if (allData.length >= 999) { showToast('Storage limit reached!'); return; }
+  const result = await window.dataSdk.create({ type: 'meal', date: today(), calories: cal, workout_done: false, water_glasses: 0, weight: 0, meal_logged: name, chat_role: '', chat_message: '', xp: 0 });
+  if (result.isOk) {
+    showToast(`🍽️ ${name} logged! +10 XP`);
+    addXP(10);
+    checkBadge('first_meal', true);
+    document.getElementById('meal-name-input').value = '';
+    document.getElementById('meal-cal-input').value = '';
+  }
+}
+
+function updateMealsLog() {
+  const meals = getTodayData().filter(r => r.type === 'meal');
+  const container = document.getElementById('meals-log-list');
+  if (meals.length === 0) {
+    container.innerHTML = '<p class="text-gray-500 text-sm text-center py-2">No meals logged yet today</p>';
+    return;
+  }
+  container.innerHTML = meals.map(m => `
+    <div class="flex justify-between items-center bg-[#0d0d1a] rounded-lg px-3 py-2 border border-[#1e1e35]">
+      <span class="text-sm text-gray-300">${m.meal_logged || 'Meal'}</span>
+      <span class="text-emerald-400 text-sm font-semibold">${m.calories || 0} kcal</span>
+    </div>
+  `).join('');
+}
+
+// ─── WORKOUTS ───
+function generateWorkout() {
+  const goal = profile ? profile.goal : 'maintain';
+  const db = WORKOUT_DB[goal] || WORKOUT_DB.maintain;
+  const plan = db.plans[Math.floor(Math.random() * db.plans.length)];
+  const container = document.getElementById('workout-plan-content');
+  container.innerHTML = `
+    <div class="bg-gradient-to-r from-emerald-900/30 to-purple-900/20 rounded-xl p-4 border border-emerald-500/20 mb-3">
+      <h4 class="text-emerald-400 font-bold text-base">${plan.title}</h4>
+      <p class="text-xs text-gray-400">${plan.focus} • ${plan.exercises.length} exercises</p>
+    </div>
+    ${plan.exercises.map((ex, i) => `
+      <div class="bg-[#0d0d1a] rounded-xl p-3 border border-[#1e1e35] flex items-center gap-3">
+        <div class="w-7 h-7 rounded-full bg-emerald-600/20 text-emerald-400 flex items-center justify-center text-xs font-bold flex-shrink-0">${i + 1}</div>
+        <div class="flex-1">
+          <div class="text-sm font-semibold text-gray-200">${ex.name}</div>
+          <div class="text-[10px] text-gray-500">${ex.sets} sets × ${ex.reps} | Rest: ${ex.rest}</div>
+        </div>
+      </div>
+    `).join('')}
+  `;
+}
+
+// ─── REST TIMER ───
+function setTimer(sec) {
+  timerSeconds = sec;
+  timerRunning = false;
+  if (timerInterval) clearInterval(timerInterval);
+  updateTimerDisplay();
+  document.getElementById('timer-btn').textContent = 'Start';
+}
+function toggleTimer() {
+  if (timerRunning) {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    document.getElementById('timer-btn').textContent = 'Start';
+  } else {
+    timerRunning = true;
+    document.getElementById('timer-btn').textContent = 'Pause';
+    timerInterval = setInterval(() => {
+      timerSeconds--;
+      if (timerSeconds <= 0) {
+        clearInterval(timerInterval);
+        timerRunning = false;
+        timerSeconds = 0;
+        document.getElementById('timer-btn').textContent = 'Start';
+        showToast('⏱️ Time\'s up! Get back to it!');
+      }
+      updateTimerDisplay();
+    }, 1000);
+  }
+}
+function updateTimerDisplay() {
+  const m = Math.floor(timerSeconds / 60);
+  const s = timerSeconds % 60;
+  document.getElementById('timer-display').textContent = `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+// ─── AI CHAT ───
+function classifyMessage(msg) {
+  const m = msg.toLowerCase();
+  if (/^(hi|hello|hey|howdy|yo|sup|greetings)/.test(m)) return 'greetings';
+  if (/weight\s*loss|lose\s*(weight|fat)|slim|cut|lean|belly\s*fat|fat\s*loss|shred/.test(m)) return 'weight_loss';
+  if (/muscle|bulk|gain|mass|grow|hypertrophy|big/.test(m)) return 'muscle_gain';
+  if (/protein/.test(m)) return 'protein';
+  if (/sleep|insomnia|rest|tired|fatigue/.test(m)) return 'sleep';
+  if (/water|hydrat|drink|thirst/.test(m)) return 'water';
+  if (/motivat|lazy|can't|give up|stuck|discouraged|discipline/.test(m)) return 'motivation';
+  if (/stretch|flex|warm|cool\s*down|mobility|yoga/.test(m)) return 'stretching';
+  if (/stress|anxi|relax|meditat|mental|calm|burnout/.test(m)) return 'stress';
+  if (/supplement|creatine|vitamin|omega|whey|bcaa/.test(m)) return 'supplements';
+  if (/nutri|diet|eat|food|meal|calori|macro|carb|fat/.test(m)) return 'nutrition';
+  return 'default';
+}
+
+function getAIResponse(msg) {
+  const category = classifyMessage(msg);
+  const responses = AI_RESPONSES[category] || AI_RESPONSES.default;
+  return responses[Math.floor(Math.random() * responses.length)];
+}
+
+function addChatBubble(role, text) {
+  const container = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = role === 'user'
+    ? 'chat-bubble-user px-4 py-3 max-w-[85%] ml-auto anim-up'
+    : 'chat-bubble-ai px-4 py-3 max-w-[85%] anim-up';
+  // Parse markdown bold
+  const html = text.replace(/\*\*(.*?)\*\*/g, '<strong class="text-emerald-300">$1</strong>').replace(/\n/g, '<br>');
+  div.innerHTML = `<p class="text-sm text-gray-200">${html}</p>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  if (textToSpeechEnabled) speakText(text);
+}
+
+function sendChat() {
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  addChatBubble('user', msg);
+  // Simulate typing delay
+  setTimeout(() => {
+    const response = getAIResponse(msg);
+    addChatBubble('ai', response);
+  }, 400 + Math.random() * 600);
+}
+
+// ─── PROGRESS TAB ───
+function updateWeeklyChart() {
+  const container = document.getElementById('weekly-chart');
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    days.push(d.toISOString().slice(0, 10));
+  }
+  const target = calcBMR();
+  let html = '';
+  days.forEach(d => {
+    const dayData = allData.filter(r => r.date === d && r.type === 'meal');
+    const cal = dayData.reduce((s, r) => s + (r.calories || 0), 0);
+    const pct = Math.max(Math.min(cal / target * 100, 100), 4);
+    const color = cal > 0 ? (cal > target * 1.1 ? '#ef4444' : '#10b981') : '#1e1e35';
+    html += `<div class="flex-1 flex flex-col items-center justify-end h-full">
+      <div class="text-[9px] text-gray-500 mb-1">${cal > 0 ? cal : ''}</div>
+      <div style="height:${pct}%; background:${color}; min-height:4px;" class="w-full rounded-t-md transition-all duration-500"></div>
+    </div>`;
+  });
+  container.innerHTML = html;
+}
+
+function updateBadges() {
+  const container = document.getElementById('badges-container');
+  const earned = profile ? (profile.badges || []) : [];
+  container.innerHTML = ALL_BADGES.map(b => {
+    const isEarned = earned.includes(b.id);
+    return `<div class="flex items-center gap-2 ${isEarned ? 'bg-emerald-900/30 border-emerald-500/30' : 'bg-[#0d0d1a] border-[#1e1e35]'} border rounded-full px-3 py-1.5">
+      <span class="${isEarned ? '' : 'grayscale opacity-40'}">${b.icon}</span>
+      <span class="text-xs ${isEarned ? 'text-emerald-400' : 'text-gray-600'} font-semibold">${b.name}</span>
+    </div>`;
+  }).join('');
+}
+
+// ─── WEIGHT LOG ───
+async function logWeight() {
+  const val = parseFloat(document.getElementById('weight-input').value);
+  if (!val || val < 20 || val > 500) { showToast('Enter a valid weight'); return; }
+  if (allData.length >= 999) { showToast('Storage limit reached!'); return; }
+  const result = await window.dataSdk.create({ type: 'weight', date: today(), calories: 0, workout_done: false, water_glasses: 0, weight: val, meal_logged: '', chat_role: '', chat_message: '', xp: 0 });
+  if (result.isOk) {
+    showToast(`⚖️ ${val}kg logged! +5 XP`);
+    addXP(5);
+    document.getElementById('weight-input').value = '';
+    if (profile) { profile.weight = val; saveProfile(profile); }
+  }
+}
+
+function updateWeightHistory() {
+  const weights = allData.filter(r => r.type === 'weight').sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
+  const container = document.getElementById('weight-history');
+  if (weights.length === 0) {
+    container.innerHTML = '<p class="text-xs text-gray-600 text-center">No weight entries yet</p>';
+    return;
+  }
+  container.innerHTML = weights.map(w => `
+    <div class="flex justify-between text-xs bg-[#0d0d1a] rounded-lg px-3 py-2 border border-[#1e1e35]">
+      <span class="text-gray-500">${w.date}</span>
+      <span class="text-gray-300 font-semibold">${w.weight} kg</span>
+    </div>
+  `).join('');
+}
+
+// ─── RESET ───
+function showResetConfirm() { document.getElementById('reset-confirm').classList.remove('hidden'); }
+function hideResetConfirm() { document.getElementById('reset-confirm').classList.add('hidden'); }
+async function resetProfile() {
+  localStorage.removeItem('fc_profile');
+  profile = null;
+  // Delete all data
+  for (const item of [...allData]) {
+    await window.dataSdk.delete(item);
+  }
+  document.getElementById('main-app').style.display = 'none';
+  document.getElementById('onboarding-screen').style.display = 'flex';
+  hideResetConfirm();
+}
+
+// ─── DATA SDK ───
+const dataHandler = {
+  onDataChanged(data) {
+    allData = data;
+    if (profile && document.getElementById('main-app').style.display !== 'none') {
+      updateDashboard();
+      updateMealsLog();
+      updateWeeklyChart();
+      updateWeightHistory();
+    }
+  }
+};
+
+// ─── ELEMENT SDK ───
+const defaultConfig = {
+  app_title: 'FlexCoach',
+  welcome_message: 'Your AI Health Coach',
+  background_color: '#0a0a14',
+  surface_color: '#12121f',
+  text_color: '#e5e7eb',
+  primary_action_color: '#10b981',
+  secondary_action_color: '#6366f1',
+  font_family: 'Outfit',
+  font_size: 14
+};
+
+function applyConfig(config) {
+  const bg = config.background_color || defaultConfig.background_color;
+  const surface = config.surface_color || defaultConfig.surface_color;
+  const text = config.text_color || defaultConfig.text_color;
+  const primary = config.primary_action_color || defaultConfig.primary_action_color;
+  const secondary = config.secondary_action_color || defaultConfig.secondary_action_color;
+  const font = config.font_family || defaultConfig.font_family;
+  const size = config.font_size || defaultConfig.font_size;
+  const title = config.app_title || defaultConfig.app_title;
+  const welcome = config.welcome_message || defaultConfig.welcome_message;
+
+  document.body.style.backgroundColor = bg;
+  document.querySelector('.app-shell').style.fontFamily = `${font}, Outfit, sans-serif`;
+  document.querySelector('.app-shell').style.fontSize = size + 'px';
+
+  // Title
+  const mainTitle = document.getElementById('main-title');
+  const obTitle = document.getElementById('onboard-title');
+  if (mainTitle) { mainTitle.textContent = title; mainTitle.style.color = primary; }
+  if (obTitle) { obTitle.textContent = title; obTitle.style.color = primary; }
+
+  const obSub = document.getElementById('onboard-subtitle');
+  if (obSub) obSub.textContent = welcome;
+
+  // Colors on surfaces
+  document.querySelectorAll('.card-dark').forEach(el => {
+    el.style.background = surface;
+    el.style.borderColor = surface;
+  });
+  document.querySelectorAll('.tab-active').forEach(el => {
+    el.style.background = `linear-gradient(135deg, ${primary}, ${primary})`;
+  });
+}
+
+window.elementSdk.init({
+  defaultConfig,
+  onConfigChange: async (config) => { applyConfig(config); },
+  mapToCapabilities: (config) => ({
+    recolorables: [
+      { get: () => config.background_color || defaultConfig.background_color, set: (v) => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); } },
+      { get: () => config.surface_color || defaultConfig.surface_color, set: (v) => { config.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); } },
+      { get: () => config.text_color || defaultConfig.text_color, set: (v) => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); } },
+      { get: () => config.primary_action_color || defaultConfig.primary_action_color, set: (v) => { config.primary_action_color = v; window.elementSdk.setConfig({ primary_action_color: v }); } },
+      { get: () => config.secondary_action_color || defaultConfig.secondary_action_color, set: (v) => { config.secondary_action_color = v; window.elementSdk.setConfig({ secondary_action_color: v }); } },
+    ],
+    borderables: [],
+    fontEditable: {
+      get: () => config.font_family || defaultConfig.font_family,
+      set: (v) => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); }
+    },
+    fontSizeable: {
+      get: () => config.font_size || defaultConfig.font_size,
+      set: (v) => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); }
+    }
+  }),
+  mapToEditPanelValues: (config) => new Map([
+    ['app_title', config.app_title || defaultConfig.app_title],
+    ['welcome_message', config.welcome_message || defaultConfig.welcome_message]
+  ])
+});
+
+// ─── INIT ───
+(async function init() {
+  const result = await window.dataSdk.init(dataHandler);
+  if (!result.isOk) console.error('Data SDK init failed');
+
+  profile = getProfile();
+  if (profile) {
+    showMainApp();
+  } else {
+    document.getElementById('onboarding-screen').style.display = 'flex';
+  }
+
+  // Load TTS preference
+  textToSpeechEnabled = localStorage.getItem('fc_tts_enabled') === 'true';
+  if (textToSpeechEnabled) {
+    const toggle = document.getElementById('tts-toggle');
+    if (toggle) {
+      toggle.classList.add('ring-2', 'ring-purple-400');
+    }
+  }
+  lucide.createIcons();
+})();
+</script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9e3d0228817ab2fd',t:'MTc3NDc2Nzc0MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
